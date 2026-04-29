@@ -1,0 +1,48 @@
+{
+  "entities": [
+    {
+      "name": "Ground",
+      "transform": {
+        "translation": [0.0, 0.0, 0.0],
+        "rotation": [0.0, 0.0, 0.0, 1.0],
+        "scale": [20.0, 1.0, 20.0]
+      },
+      "components": [
+        { "type": "mesh", "mesh_ref": "plane" }
+      ]
+    },
+    {
+      "name": "PlayerStart",
+      "transform": {
+        "translation": [0.0, 0.5, 0.0],
+        "rotation": [0.0, 0.0, 0.0, 1.0],
+        "scale": [1.0, 1.0, 1.0]
+      },
+      "components": [
+        { "type": "mesh", "mesh_ref": "cube" }
+      ]
+    },
+    {
+      "name": "EnemyCamp",
+      "transform": {
+        "translation": [8.0, 0.5, 8.0],
+        "rotation": [0.0, 0.0, 0.0, 1.0],
+        "scale": [2.0, 2.0, 2.0]
+      },
+      "components": [
+        { "type": "mesh", "mesh_ref": "cube" }
+      ]
+    },
+    {
+      "name": "ResourceNode",
+      "transform": {
+        "translation": [-5.0, 0.5, 3.0],
+        "rotation": [0.0, 0.0, 0.0, 1.0],
+        "scale": [0.8, 0.8, 0.8]
+      },
+      "components": [
+        { "type": "mesh", "mesh_ref": "sphere" }
+      ]
+    }
+  ]
+}

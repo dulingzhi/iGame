@@ -1,3 +1,5 @@
+//! Scene data — the entity/component tree (serialised as RON in `scene.ron`).
+
 use serde::{Deserialize, Serialize};
 
 /// The full scene graph for a map.
@@ -20,6 +22,7 @@ pub struct EntityData {
     pub sprite: Option<SpriteData>,
 
     /// Logical tags (e.g. "unit", "ground", "player").
+    #[serde(default)]
     pub tags: Vec<String>,
 }
 

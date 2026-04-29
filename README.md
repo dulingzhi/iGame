@@ -137,3 +137,10 @@ required.
 See [docs/CI_AND_AUTOMERGE.md](docs/CI_AND_AUTOMERGE.md) for the full policy
 and the one-time repository settings required (Allow auto-merge, branch
 protections).
+
+---
+
+## Testing Guide / 测试指南
+
+See [TESTING.md](TESTING.md) for the full test strategy, how to run specific
+test suites, and conventions for adding new tests.

@@ -1,3 +1,5 @@
+//! Map package — top-level container for manifest + scene data.
+
 use std::path::Path;
 
 use crate::{error::MapPackageError, manifest::Manifest, scene::MapScene};
@@ -15,20 +17,26 @@ pub struct MapPackage {
 impl MapPackage {
     /// Load a map package from a directory on disk.
     ///
-    /// Expects `<path>/manifest.toml` and the scene file referenced by
-    /// `manifest.entry_scene`.
+    /// Expects `<dir>/manifest.toml` and the scene file referenced by
+    /// `manifest.entry_scene` (RON format).
     pub fn load(path: &Path) -> Result<Self, MapPackageError> {
-        // --- manifest ---
-        let manifest_path = path.join("manifest.toml");
-        let manifest_str = std::fs::read_to_string(&manifest_path)?;
+        let manifest_str = std::fs::read_to_string(path.join("manifest.toml"))?;
         let manifest: Manifest = toml::from_str(&manifest_str)?;
 
-        // --- scene ---
-        let scene_path = path.join(&manifest.entry_scene);
-        let scene_str = std::fs::read_to_string(&scene_path)?;
+        let scene_str = std::fs::read_to_string(path.join(&manifest.entry_scene))?;
         let scene: MapScene =
             ron::from_str(&scene_str).map_err(|e| MapPackageError::Ron(e.to_string()))?;
 
+        Ok(MapPackage { manifest, scene })
+    }
+
+    /// Load a map package from in-memory strings (useful for tests and embedded maps).
+    ///
+    /// `manifest_toml` is TOML text, `scene_ron` is RON text.
+    pub fn from_strings(manifest_toml: &str, scene_ron: &str) -> Result<Self, MapPackageError> {
+        let manifest: Manifest = toml::from_str(manifest_toml)?;
+        let scene: MapScene =
+            ron::from_str(scene_ron).map_err(|e| MapPackageError::Ron(e.to_string()))?;
         Ok(MapPackage { manifest, scene })
     }
 }
