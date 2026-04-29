@@ -104,9 +104,9 @@ mod tests {
         m.map.id = String::new();
         let errs = validate_manifest(&m);
         assert!(!errs.is_empty());
-        assert!(errs
-            .iter()
-            .any(|e| matches!(e, ValidationError::EmptyRequiredField { field } if field == "map.id")));
+        assert!(errs.iter().any(
+            |e| matches!(e, ValidationError::EmptyRequiredField { field } if field == "map.id")
+        ));
     }
 
     #[test]

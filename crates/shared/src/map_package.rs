@@ -17,8 +17,7 @@ impl MapPackage {
     pub fn from_str(manifest_toml: &str, scene_json: &str) -> Result<Self> {
         let manifest =
             MapManifest::from_toml_str(manifest_toml).context("failed to parse manifest.toml")?;
-        let scene =
-            SceneData::from_json_str(scene_json).context("failed to parse scene JSON")?;
+        let scene = SceneData::from_json_str(scene_json).context("failed to parse scene JSON")?;
         Ok(Self { manifest, scene })
     }
 

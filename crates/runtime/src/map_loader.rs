@@ -26,7 +26,10 @@ fn load_example_map(mut loaded_map: ResMut<LoadedMap>) {
         Ok(pkg) => {
             let errors = pkg.validate();
             if errors.is_empty() {
-                info!("Loaded map: {} v{}", pkg.manifest.map.name, pkg.manifest.map.version);
+                info!(
+                    "Loaded map: {} v{}",
+                    pkg.manifest.map.name, pkg.manifest.map.version
+                );
                 info!("  entities: {}", pkg.scene.entities.len());
             } else {
                 warn!("Map loaded with {} validation error(s):", errors.len());

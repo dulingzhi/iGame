@@ -21,14 +21,22 @@ fn load_example_map_succeeds() {
 #[test]
 fn example_map_has_correct_entity_count() {
     let pkg = MapPackage::from_str(MANIFEST_TOML, SCENE_JSON).unwrap();
-    assert_eq!(pkg.scene.entities.len(), 3, "example map should have 3 entities");
+    assert_eq!(
+        pkg.scene.entities.len(),
+        3,
+        "example map should have 3 entities"
+    );
 }
 
 #[test]
 fn example_map_entity_ids_are_unique() {
     let pkg = MapPackage::from_str(MANIFEST_TOML, SCENE_JSON).unwrap();
     let errors = validate_scene(&pkg.scene);
-    assert!(errors.is_empty(), "no validation errors expected: {:?}", errors);
+    assert!(
+        errors.is_empty(),
+        "no validation errors expected: {:?}",
+        errors
+    );
 }
 
 #[test]
