@@ -14,10 +14,12 @@ permissions:
   contents: read
 
 jobs:
-  # ── Formatting ────────────────────────────────────────────────────────────────
+  # ── Formatting ────────────────────────────────────────────────────────────
   fmt:
     name: Formatting
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
@@ -26,16 +28,20 @@ jobs:
       - name: Check formatting
         run: cargo fmt --all -- --check
 
-  # ── Clippy ────────────────────────────────────────────────────────────────────
+  # ── Clippy ────────────────────────────────────────────────────────────────
   clippy:
     name: Clippy
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
         with:
           components: clippy
       - uses: Swatinem/rust-cache@v2
+        with:
+          cache-on-failure: true
       - name: Install Linux dependencies
         run: |
           sudo apt-get update
@@ -44,14 +50,18 @@ jobs:
       - name: Run clippy
         run: cargo clippy --workspace -- -D warnings
 
-  # ── Tests (native) ────────────────────────────────────────────────────────────
+  # ── Tests ─────────────────────────────────────────────────────────────────
   test:
     name: Tests
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
+        with:
+          cache-on-failure: true
       - name: Install Linux dependencies
         run: |
           sudo apt-get update
@@ -60,15 +70,20 @@ jobs:
       - name: Run tests
         run: cargo test --workspace
 
-  # ── WASM build check (shared crate only) ──────────────────────────────────────
+  # ── WASM build check (shared crate only) ──────────────────────────────────
   wasm-build:
     name: WASM Build (shared)
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
         with:
           targets: wasm32-unknown-unknown
       - uses: Swatinem/rust-cache@v2
+        with:
+          key: wasm32
+          cache-on-failure: true
       - name: Build shared crate for WASM
         run: cargo build -p igame-shared --target wasm32-unknown-unknown
