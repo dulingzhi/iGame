@@ -1,16 +1,19 @@
-//! iGame runtime crate.
+//! iGame runtime library.
+//!
+//! Re-exports key types used by the binary and integration tests.
 
-/// Returns a greeting string.
-pub fn hello() -> &'static str {
-    "Hello from iGame runtime!"
-}
+pub mod camera;
+pub mod map_loader;
+pub mod scene_spawner;
+pub mod state;
+pub mod world;
 
-#[cfg(test)]
-mod tests {
-    use super::*;
+use bevy::prelude::Resource;
+use igame_shared::map_package::MapPackage;
 
-    #[test]
-    fn test_hello() {
-        assert_eq!(hello(), "Hello from iGame runtime!");
-    }
-}
+/// Bevy resource holding the currently loaded [`MapPackage`].
+#[derive(Resource)]
+pub struct LoadedMap(pub MapPackage);
+
+// Keep backwards-compatible re-exports used by integration tests.
+pub use map_loader::SpawnedEntities;

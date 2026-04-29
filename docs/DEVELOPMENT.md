@@ -1,90 +1,182 @@
 # Development Guide
 
-## Local Development Commands
+This document provides an in-depth technical reference for developing iGame: architecture decisions, build targets, testing strategy, and the iterative development loop.
 
-### Format
+---
 
-```bash
-cargo fmt --all
+## Table of Contents
+
+1. [Architecture overview](#architecture-overview)
+2. [Workspace crates](#workspace-crates)
+3. [Building for different targets](#building-for-different-targets)
+4. [Testing strategy](#testing-strategy)
+5. [Development loop](#development-loop)
+6. [Roadmap reference](#roadmap-reference)
+
+---
+
+## Architecture overview
+
+iGame is structured as a **Bevy-based UGC platform**:
+
+```
+┌─────────────────────────────────────────────────────────┐
+│                    Editor (desktop)                      │
+│  egui UI  │  Viewport  │  Trigger Graph  │  Asset Browser│
+└──────────────────────────┬──────────────────────────────┘
+                           │ loads / saves
+                           ▼
+┌─────────────────────────────────────────────────────────┐
+│                  Map Package (data)                      │
+│  manifest.toml │ scene/*.json │ triggers/*.json          │
+│  rules/*.json  │ assets/      │ localization/            │
+└──────────────────────────┬──────────────────────────────┘
+                           │ parsed by igame-shared
+                           ▼
+┌─────────────────────────────────────────────────────────┐
+│               Runtime  (desktop + wasm32)                │
+│  World (ECS)  │  Systems  │  Trigger Interpreter         │
+└─────────────────────────────────────────────────────────┘
 ```
 
-### Lint (Clippy)
+Key design decisions:
 
-```bash
-cargo clippy --workspace --all-targets -- -D warnings
+- **Data-driven**: all game content lives in JSON/TOML files, not Rust code.
+- **ECS**: the runtime uses an Entity-Component-System model (Bevy in later milestones).
+- **ECA triggers**: a visual Event-Condition-Action graph drives gameplay logic without requiring players to write code.
+- **Desktop-first editor, Web-compatible runtime**: the editor targets native desktop; the runtime compiles to `wasm32-unknown-unknown` for browser play.
+
+---
+
+## Workspace crates
+
+| Crate | Path | wasm32 | Purpose |
+|-------|------|--------|---------|
+| `igame-shared` | `crates/shared` | ✅ | Data structures, serialisation, validation |
+| `igame-runtime` | `crates/runtime` | ✅ | ECS world, systems, trigger interpreter |
+| `igame-editor` | `crates/editor` | ❌ | Desktop editor (egui UI, scene tools) |
+
+### Crate dependency graph
+
+```
+igame-editor
+  ├── igame-runtime
+  │     └── igame-shared
+  └── igame-shared
 ```
 
-### Test
+`igame-shared` has **no** internal dependencies and is the single source of truth for the map package format.
+
+---
+
+## Building for different targets
+
+### Native (desktop)
+
+```bash
+# Debug build (all crates)
+cargo build --workspace
+
+# Release build
+cargo build --workspace --release
+
+# Run the editor (once binary target is added)
+cargo run -p igame-editor
+```
+
+### Web (`wasm32-unknown-unknown`)
+
+Only `igame-shared` and `igame-runtime` are wasm32-compatible.  
+The editor is **excluded** from wasm32 builds.
+
+```bash
+# Add the target once
+rustup target add wasm32-unknown-unknown
+
+# Build wasm32 crates
+cargo build --target wasm32-unknown-unknown -p igame-shared -p igame-runtime
+
+# (Future) bundle with wasm-pack for the browser
+wasm-pack build crates/runtime --target web
+```
+
+> **wasm32 compatibility rules**:  
+> - Never use `std::fs`, `std::net`, or `std::thread` directly in `igame-shared` or `igame-runtime`.  
+> - Gate any platform-specific code with `#[cfg(not(target_arch = "wasm32"))]`.  
+> - Add integration tests that verify the wasm32 build on every PR (handled by CI).
+
+---
+
+## Testing strategy
+
+### Unit tests
+
+Every module should have a `#[cfg(test)]` block. Focus on:
+
+- Serialisation/deserialisation round-trips (TOML manifests, JSON scenes, trigger graphs).
+- Validation logic (empty fields, missing references, version incompatibilities).
+- Pure data transformations (component lookups, ECA graph traversal).
 
 ```bash
 cargo test --workspace
 ```
 
-### Run (desktop)
+### Integration tests
+
+Place integration tests under `crates/<crate>/tests/`.  
+These test end-to-end flows: load a fixture map package → spawn entities → run N ticks → assert world state.
 
 ```bash
-cargo run -p igame-runtime
+cargo test --workspace --test '*'
 ```
 
-### Build for WebAssembly
+### Golden / snapshot tests
 
-```bash
-rustup target add wasm32-unknown-unknown
-cargo build --workspace --target wasm32-unknown-unknown
+For stability of serialised formats, keep reference fixtures in `crates/shared/tests/fixtures/` and assert that the parser produces the expected output.
+
+### CI matrix
+
+| Check | Scope | Fail-fast |
+|-------|-------|-----------|
+| `cargo fmt --check` | all crates | yes |
+| `cargo clippy -- -D warnings` | all crates, all targets | yes |
+| `cargo test` | all crates | yes |
+| `cargo build --target wasm32-unknown-unknown` | shared + runtime | yes |
+
+---
+
+## Development loop
+
+The recommended cycle for each feature:
+
+```
+1. Write a failing test (TDD preferred)
+       ↓
+2. Implement the feature
+       ↓
+3. cargo test --workspace            ← verify tests pass
+4. cargo clippy -- -D warnings       ← no new warnings
+5. cargo fmt --all                   ← tidy formatting
+       ↓
+6. Commit, open PR, add `automerge` label
+       ↓
+7. CI green → auto squash-merge
+       ↓
+8. Move to the next feature
 ```
 
 ---
 
-## CI Checks
+## Roadmap reference
 
-Every push and pull request automatically runs the following checks:
+See [ROADMAP.md](../ROADMAP.md) for the full milestone plan.  
+Key milestones relevant to contributors:
 
-| Check | Command |
-|---|---|
-| Format | `cargo fmt --all -- --check` |
-| Clippy (deny warnings) | `cargo clippy --workspace --all-targets -- -D warnings` |
-| Tests | `cargo test --workspace` |
-| WASM build | `cargo build --workspace --target wasm32-unknown-unknown` |
-
-All checks must pass before a PR can be merged.
-
----
-
-## Auto-merge
-
-PRs that meet **all** of the following conditions are automatically merged using the **rebase** strategy once all required CI checks pass:
-
-1. The PR is **not a draft**.
-2. The PR originates from **this repository** (forks are excluded).
-3. The PR has the **`automerge`** label.
-
-### How to trigger auto-merge
-
-Add the `automerge` label to your PR (via the GitHub UI or `gh` CLI):
-
-```bash
-gh pr edit <PR-number> --add-label automerge
-```
-
-Once the label is applied and all CI checks turn green, the PR will be rebased onto `main` and merged automatically.
-
----
-
-## Recommended Branch Protection Settings (main)
-
-Configure these under **Settings → Branches → Branch protection rules → main**:
-
-| Setting | Value |
-|---|---|
-| Require a pull request before merging | ✅ enabled |
-| Required status checks | `fmt / clippy / test`, `wasm32 build` |
-| Require branches to be up to date before merging | ✅ enabled |
-| Require conversation resolution before merging | optional |
-| Require approvals | **0** (no manual reviews required) |
-| Allow rebase merging | ✅ enabled |
-| Allow squash merging | optional |
-| Allow merge commits | optional |
-| Allow auto-merge | ✅ **must be enabled** (Settings → General) |
-| Automatically delete head branches | ✅ recommended |
-
-> **Important:** GitHub's native auto-merge feature must be enabled in **Settings → General → Allow auto-merge** for the auto-merge workflow to work.
+| Milestone | Focus |
+|-----------|-------|
+| M0 | Engineering foundation (this PR) |
+| M1 | Runtime MVP: scene loading, camera, input |
+| M2 | Map Package v1: manifest + scene + validation |
+| M3 | Editor MVP: viewport, inspector, save/load |
+| M4 | Trigger system: ECA node graph + interpreter |
+| M5 | Web play: wasm bundle, map index, browser UI |
