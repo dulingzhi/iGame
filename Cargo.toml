@@ -1,0 +1,6 @@
+[workspace]
+members = ["crates/igame_runtime", "crates/igame_editor"]
+resolver = "2"
+
+[workspace.lints.rust]
+unused = "warn"

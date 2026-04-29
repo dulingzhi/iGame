@@ -1,0 +1,50 @@
+name: CI
+
+on:
+  push:
+    branches: [main, 'copilot/**']
+  pull_request:
+    branches: [main]
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+          targets: wasm32-unknown-unknown
+
+      - uses: Swatinem/rust-cache@v2
+
+      - name: Install system deps
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y \
+            libasound2-dev \
+            libwayland-dev \
+            libxi-dev \
+            libx11-dev \
+            libxcb-render0-dev \
+            libxcb-shape0-dev \
+            libxcb-xfixes0-dev \
+            libxkbcommon-dev \
+            libgl1-mesa-dev \
+            libegl1-mesa-dev
+
+      - name: fmt
+        run: cargo fmt --all -- --check
+
+      - name: clippy (runtime)
+        run: cargo clippy --package igame_runtime -- -D warnings
+
+      - name: test (runtime)
+        run: cargo test --package igame_runtime
+
+      - name: check (editor)
+        run: cargo check --package igame_editor
+
+      - name: wasm check (runtime)
+        run: cargo check --package igame_runtime --target wasm32-unknown-unknown
