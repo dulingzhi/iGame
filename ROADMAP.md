@@ -628,7 +628,6 @@ common_assets = "^1.0"
 - [Bevy GitHub](https://github.com/bevyengine/bevy)
 - [Bevy Book（入门文档）](https://bevyengine.org/learn/book/introduction/)
 - [Rust wasm 工作组](https://rustwasm.github.io/)
-- [War3 地图格式参考（非官方）](https://github.com/nicktindall/cyclon.p2p)
 
 ---
 
