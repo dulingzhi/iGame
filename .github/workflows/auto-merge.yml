@@ -1,0 +1,109 @@
+name: Auto-merge
+
+on:
+  pull_request_target:
+    types:
+      - opened
+      - synchronize
+      - reopened
+      - ready_for_review
+      - labeled
+      - unlabeled
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  auto-merge:
+    name: Enable auto-merge (rebase)
+    runs-on: ubuntu-latest
+    # Only process PRs targeting main
+    if: github.event.pull_request.base.ref == 'main'
+    steps:
+      - name: Check eligibility and enable auto-merge
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const pr = context.payload.pull_request;
+            const prNumber = pr.number;
+            const author = pr.user.login;
+            const headRepo = pr.head.repo ? pr.head.repo.full_name : null;
+            const baseRepo = pr.base.repo.full_name;
+
+            // --- Allowlist (Safety Mode A) ---
+            const ALLOWLIST = ['dulingzhi', 'github-actions[bot]', 'copilot-swe-agent[bot]'];
+
+            core.info(`PR #${prNumber} by ${author} | head: ${headRepo} | base: ${baseRepo}`);
+
+            // 1. Author must be in allowlist
+            if (!ALLOWLIST.includes(author)) {
+              core.info(`Skipping: author "${author}" is not in the allowlist.`);
+              return;
+            }
+
+            // 2. Must be same-repo (not a fork)
+            if (headRepo !== baseRepo) {
+              core.info(`Skipping: PR is from a fork (${headRepo} != ${baseRepo}).`);
+              return;
+            }
+
+            // 3. Must not be a draft
+            if (pr.draft) {
+              core.info('Skipping: PR is a draft.');
+              return;
+            }
+
+            // 4. Title must not contain WIP (case-insensitive)
+            if (/\bWIP\b/i.test(pr.title)) {
+              core.info(`Skipping: PR title contains WIP ("${pr.title}").`);
+              return;
+            }
+
+            // 5. Must not have the "do-not-merge" label
+            const labels = pr.labels.map(l => l.name);
+            if (labels.includes('do-not-merge')) {
+              core.info('Skipping: PR has the "do-not-merge" label.');
+              return;
+            }
+
+            // 6. Enable GitHub native auto-merge with rebase strategy
+            core.info(`All checks passed. Enabling auto-merge (rebase) for PR #${prNumber}...`);
+            try {
+              // Use GraphQL to enable auto-merge (REST API does not expose it directly)
+              const { data: prData } = await github.rest.pulls.get({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pull_number: prNumber,
+              });
+
+              await github.graphql(`
+                mutation EnableAutoMerge($pullRequestId: ID!) {
+                  enablePullRequestAutoMerge(input: {
+                    pullRequestId: $pullRequestId,
+                    mergeMethod: REBASE
+                  }) {
+                    pullRequest {
+                      autoMergeRequest {
+                        mergeMethod
+                        enabledAt
+                      }
+                    }
+                  }
+                }
+              `, {
+                pullRequestId: prData.node_id,
+              });
+
+              core.info(`Auto-merge (rebase) successfully enabled for PR #${prNumber}.`);
+            } catch (err) {
+              // GitHub GraphQL returns a specific message when auto-merge is already active
+              const alreadyEnabled = err.message &&
+                /auto.merge.*(already|enabled)/i.test(err.message);
+              if (alreadyEnabled) {
+                core.info(`Auto-merge was already enabled for PR #${prNumber}.`);
+              } else {
+                core.setFailed(`Failed to enable auto-merge: ${err.message}`);
+              }
+            }
