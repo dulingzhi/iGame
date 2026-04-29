@@ -4,13 +4,12 @@ on:
   push:
     branches: [main]
   pull_request:
-    branches: [main]
 
 env:
   CARGO_TERM_COLOR: always
   RUST_BACKTRACE: 1
 
-# Default to read-only for all tokens; each job can escalate only what it needs.
+# CI jobs only need read access to the repository.
 permissions:
   contents: read
 

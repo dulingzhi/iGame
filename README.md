@@ -1,5 +1,7 @@
 # iGame
 
+[![CI](https://github.com/dulingzhi/iGame/actions/workflows/ci.yml/badge.svg)](https://github.com/dulingzhi/iGame/actions/workflows/ci.yml)
+
 基于 **Rust / Bevy（ECS）** 构建的数据驱动跨平台游戏引擎，面向桌面端（Desktop）与 Web（wasm），配套提供类似《魔兽争霸III世界编辑器》的 **UGC 编辑器**，让玩家自行制作地图、玩法并发布试玩。
 
 A data-driven, cross-platform UGC game engine and editor built with [Bevy](https://bevyengine.org/) (Rust), inspired by Warcraft III World Editor.
@@ -119,3 +121,19 @@ entry_scene = "scene.ron"
 - [x] Clippy clean (`cargo clippy --workspace -- -D warnings`)
 - [x] WASM build for shared crate passes
 - [x] Demo map loads and renders (manual verification)
+
+---
+
+## CI & Auto-merge / 持续集成与自动合并
+
+Every pull request automatically runs four checks (fmt, clippy, tests, wasm
+build). When all checks pass **auto-merge is enabled automatically** — no label
+required.
+
+**Opt out of auto-merge:**
+- Mark the PR as a **draft**, or
+- Add the **`do-not-merge`** label.
+
+See [docs/CI_AND_AUTOMERGE.md](docs/CI_AND_AUTOMERGE.md) for the full policy
+and the one-time repository settings required (Allow auto-merge, branch
+protections).
