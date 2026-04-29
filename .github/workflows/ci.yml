@@ -4,11 +4,14 @@ on:
   push:
     branches: [main]
   pull_request:
-    branches: [main]
 
 env:
   CARGO_TERM_COLOR: always
   RUST_BACKTRACE: 1
+
+# CI jobs only need read access to the repository.
+permissions:
+  contents: read
 
 jobs:
   # ── Formatting ────────────────────────────────────────────────────────────────
