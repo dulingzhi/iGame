@@ -1,18 +1,13 @@
-//! igame-shared: common data structures and utilities shared across iGame crates.
+//! Core shared types for iGame: map packages, scenes, manifests, and validation.
 
-/// Returns the schema version for map packages.
-pub fn schema_version() -> &'static str {
-    "0.1.0"
-}
+pub mod error;
+pub mod manifest;
+pub mod map_package;
+pub mod scene;
+pub mod validate;
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn schema_version_is_semver() {
-        let v = schema_version();
-        assert!(!v.is_empty());
-        assert_eq!(v.split('.').count(), 3);
-    }
-}
+pub use error::MapPackageError;
+pub use manifest::Manifest;
+pub use map_package::MapPackage;
+pub use scene::{EntityData, MapScene, SpriteData, TransformData};
+pub use validate::validate;

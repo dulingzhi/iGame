@@ -1,23 +1,14 @@
-//! igame-runtime: the iGame game engine runtime.
+//! iGame runtime library.
+//!
+//! Re-exports key types used by the binary and integration tests.
 
-pub use igame_shared::schema_version;
+pub mod camera;
+pub mod scene_spawner;
+pub mod state;
 
-/// Returns the engine version string.
-pub fn engine_version() -> &'static str {
-    env!("CARGO_PKG_VERSION")
-}
+use bevy::prelude::Resource;
+use igame_shared::map_package::MapPackage;
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn engine_version_is_non_empty() {
-        assert!(!engine_version().is_empty());
-    }
-
-    #[test]
-    fn schema_version_accessible_from_runtime() {
-        assert!(!schema_version().is_empty());
-    }
-}
+/// Bevy resource holding the currently loaded [`MapPackage`].
+#[derive(Resource)]
+pub struct LoadedMap(pub MapPackage);

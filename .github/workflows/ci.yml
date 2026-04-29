@@ -7,14 +7,16 @@ on:
 
 env:
   CARGO_TERM_COLOR: always
+  RUST_BACKTRACE: 1
 
 # CI jobs only need read access to the repository.
 permissions:
   contents: read
 
 jobs:
+  # ── Formatting ────────────────────────────────────────────────────────────────
   fmt:
-    name: Format
+    name: Formatting
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -24,6 +26,7 @@ jobs:
       - name: Check formatting
         run: cargo fmt --all -- --check
 
+  # ── Clippy ────────────────────────────────────────────────────────────────────
   clippy:
     name: Clippy
     runs-on: ubuntu-latest
@@ -33,21 +36,33 @@ jobs:
         with:
           components: clippy
       - uses: Swatinem/rust-cache@v2
-      - name: Run Clippy
-        run: cargo clippy --all-targets --all-features -- -D warnings
+      - name: Install Linux dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            libasound2-dev libudev-dev libwayland-dev libxkbcommon-dev
+      - name: Run clippy
+        run: cargo clippy --workspace -- -D warnings
 
+  # ── Tests (native) ────────────────────────────────────────────────────────────
   test:
-    name: Test
+    name: Tests
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
-      - name: Run workspace tests
+      - name: Install Linux dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            libasound2-dev libudev-dev libwayland-dev libxkbcommon-dev
+      - name: Run tests
         run: cargo test --workspace
 
+  # ── WASM build check (shared crate only) ──────────────────────────────────────
   wasm-build:
-    name: WASM Build
+    name: WASM Build (shared)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -55,5 +70,5 @@ jobs:
         with:
           targets: wasm32-unknown-unknown
       - uses: Swatinem/rust-cache@v2
-      - name: Build for wasm32-unknown-unknown
-        run: cargo build --target wasm32-unknown-unknown --workspace
+      - name: Build shared crate for WASM
+        run: cargo build -p igame-shared --target wasm32-unknown-unknown

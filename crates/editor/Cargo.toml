@@ -1,15 +1,14 @@
 [package]
-name = "igame-runtime"
+name = "igame-editor"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
-description = "iGame runtime: Bevy app that loads and plays map packages"
+description = "iGame editor (stub – see ROADMAP.md for M3 plans)"
 
 [[bin]]
-name = "igame"
+name = "igame-editor"
 path = "src/main.rs"
 
 [dependencies]
 igame-shared = { workspace = true }
-bevy = { workspace = true }
 anyhow = { workspace = true }
