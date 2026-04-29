@@ -1,0 +1,8 @@
+# iGame Map Package — Demo Map
+# format version: 0
+name        = "Demo Map"
+version     = "0.1.0"
+author      = "iGame Team"
+description = "Minimal demo map that ships with the engine for smoke-testing and onboarding."
+engine_min  = "0.1.0"
+entry_scene = "scene.json"

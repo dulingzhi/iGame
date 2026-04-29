@@ -1,0 +1,6 @@
+name = "Demo Map"
+version = "0.1.0"
+author = "iGame Team"
+description = "A minimal demo map to showcase the iGame runtime."
+engine_version_min = "0.1.0"
+entry_scene = "scene.ron"
