@@ -1,21 +1,32 @@
 # iGame
 
+基于 **Rust / Bevy（ECS）** 构建的数据驱动跨平台游戏引擎，面向桌面端（Desktop）与 Web（wasm），配套提供类似《魔兽争霸III世界编辑器》的 **UGC 编辑器**，让玩家自行制作地图、玩法并发布试玩。
+
 A data-driven, cross-platform UGC game engine and editor built with [Bevy](https://bevyengine.org/) (Rust), inspired by Warcraft III World Editor.
 
-## Features (MVP)
+## 项目路线图 / Roadmap
 
-- **Runtime**: Loads map packages and spawns 2D entities with an RTS-style camera
-- **MapPackage format v0**: `manifest.toml` + `scene.ron` for describing scenes
-- **Extensible**: Workspace crate structure for runtime, shared data types, and editor
+👉 **[查看完整路线图 ROADMAP.md](./ROADMAP.md)**
 
-## Quick Start
+路线图涵盖：
+- 项目目标与非目标
+- 总体架构建议（Runtime / Editor / UGC 平台分层）
+- 里程碑 M0 ~ M10（目标、验收标准 DoD、关键风险）
+- 功能清单 Checklist（运行时、地图包、编辑器、触发器、UGC 分发、工程质量）
+- 触发器系统 MVP 节点清单（20 个事件/条件/动作节点）
+- GitHub 项目管理建议（Milestones + Labels）
+- 垂直切片验收样例地图
 
-### Prerequisites
+---
+
+## Quick Start / 快速开始
+
+### Prerequisites / 前提条件
 
 - Rust (stable, 1.75+): https://rustup.rs
 - On Linux: `sudo apt-get install libasound2-dev libudev-dev libwayland-dev libxkbcommon-dev`
 
-### Run the Demo Map
+### Run the Demo Map / 运行 Demo 地图
 
 ```bash
 cargo run -p igame-runtime -- assets/maps/demo
@@ -24,7 +35,7 @@ cargo run -p igame-runtime -- assets/maps/demo
 Use **WASD** or **Arrow keys** to pan the camera, **mouse scroll** to zoom.
 Press **Escape** to quit.
 
-### Run All Tests
+### Run All Tests / 运行全部测试
 
 ```bash
 cargo test --workspace
@@ -41,23 +52,28 @@ make clippy     # Run linter
 make wasm-build # Check shared crate compiles for WASM
 ```
 
-## Project Structure
+---
+
+## Project Structure / 项目结构
 
 ```
 iGame/
 ├── crates/
 │   ├── shared/     # Core types: MapPackage, Manifest, Scene, validation
 │   ├── runtime/    # Bevy app: loads maps, RTS camera, entity spawning
-│   └── editor/     # Editor (stub – coming soon)
+│   └── editor/     # Editor (stub – M3 planned)
 ├── assets/
 │   └── maps/
 │       └── demo/   # Example map package
 │           ├── manifest.toml
 │           └── scene.ron
-└── ROADMAP.md
+├── ROADMAP.md
+└── Makefile
 ```
 
-## Map Package Format (v0)
+---
+
+## Map Package Format v0 / 地图包格式
 
 A map package is a directory containing:
 
@@ -87,17 +103,15 @@ entry_scene = "scene.ron"
                 color: (0.2, 0.6, 0.2, 1.0),
                 custom_size: Some((800.0, 600.0)),
             )),
-            tags: [],
+            tags: ["ground"],
         ),
     ],
 )
 ```
 
-## Development
+---
 
-See [ROADMAP.md](ROADMAP.md) for the full development plan and milestones.
-
-### Definition of Done (Sprint 1 / M0+M1+M2)
+## Definition of Done (M0 + M1) / 验收标准
 
 - [x] Workspace compiles (`cargo check --workspace`)
 - [x] All tests pass (`cargo test --workspace`)
