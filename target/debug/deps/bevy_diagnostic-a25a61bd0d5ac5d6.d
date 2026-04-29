@@ -1,9 +1,0 @@
-/home/runner/work/iGame/iGame/target/debug/deps/bevy_diagnostic-a25a61bd0d5ac5d6.d: /home/runner/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/bevy_diagnostic-0.15.3/src/lib.rs /home/runner/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/bevy_diagnostic-0.15.3/src/diagnostic.rs /home/runner/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/bevy_diagnostic-0.15.3/src/entity_count_diagnostics_plugin.rs /home/runner/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/bevy_diagnostic-0.15.3/src/frame_time_diagnostics_plugin.rs /home/runner/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/bevy_diagnostic-0.15.3/src/log_diagnostics_plugin.rs
-
-/home/runner/work/iGame/iGame/target/debug/deps/libbevy_diagnostic-a25a61bd0d5ac5d6.rmeta: /home/runner/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/bevy_diagnostic-0.15.3/src/lib.rs /home/runner/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/bevy_diagnostic-0.15.3/src/diagnostic.rs /home/runner/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/bevy_diagnostic-0.15.3/src/entity_count_diagnostics_plugin.rs /home/runner/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/bevy_diagnostic-0.15.3/src/frame_time_diagnostics_plugin.rs /home/runner/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/bevy_diagnostic-0.15.3/src/log_diagnostics_plugin.rs
-
-/home/runner/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/bevy_diagnostic-0.15.3/src/lib.rs:
-/home/runner/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/bevy_diagnostic-0.15.3/src/diagnostic.rs:
-/home/runner/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/bevy_diagnostic-0.15.3/src/entity_count_diagnostics_plugin.rs:
-/home/runner/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/bevy_diagnostic-0.15.3/src/frame_time_diagnostics_plugin.rs:
-/home/runner/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/bevy_diagnostic-0.15.3/src/log_diagnostics_plugin.rs:
