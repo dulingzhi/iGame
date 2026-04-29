@@ -1,0 +1,12 @@
+[package]
+name = "igame-runtime"
+description = "iGame game runtime (desktop + wasm32)"
+edition.workspace = true
+version.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+igame-shared = { path = "../shared" }
+
+[dev-dependencies]

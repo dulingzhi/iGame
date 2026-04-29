@@ -1,0 +1,14 @@
+[package]
+name = "igame-shared"
+description = "Shared data structures, serialization, and validation for iGame"
+edition.workspace = true
+version.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+serde = { workspace = true }
+serde_json = { workspace = true }
+toml = { workspace = true }
+
+[dev-dependencies]
