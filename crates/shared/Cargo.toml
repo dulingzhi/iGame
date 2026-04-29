@@ -1,14 +1,13 @@
 [package]
 name = "igame-shared"
-description = "Shared data structures, serialization, and validation for iGame"
-edition.workspace = true
 version.workspace = true
+edition.workspace = true
 license.workspace = true
-repository.workspace = true
+description = "Shared data types for iGame: MapPackage, Manifest, Scene, validation"
 
 [dependencies]
 serde = { workspace = true }
-serde_json = { workspace = true }
 toml = { workspace = true }
-
-[dev-dependencies]
+ron = { workspace = true }
+thiserror = { workspace = true }
+anyhow = { workspace = true }

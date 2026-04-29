@@ -1,10 +1,13 @@
-//! igame-shared – shared data structures, serialization, and validation.
-//!
-//! This crate is `no_std`-friendly (no direct OS I/O) and compiles to
-//! `wasm32-unknown-unknown` without additional feature flags.
+//! Core shared types for iGame: map packages, scenes, manifests, and validation.
 
-pub mod map;
-pub mod trigger;
+pub mod error;
+pub mod manifest;
+pub mod map_package;
+pub mod scene;
+pub mod validate;
 
-pub use map::{MapManifest, SceneData};
-pub use trigger::TriggerGraph;
+pub use error::MapPackageError;
+pub use manifest::Manifest;
+pub use map_package::MapPackage;
+pub use scene::{EntityData, MapScene, SpriteData, TransformData};
+pub use validate::validate;

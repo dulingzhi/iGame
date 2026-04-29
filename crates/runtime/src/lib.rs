@@ -1,7 +1,14 @@
-//! igame-runtime – game runtime (desktop + wasm32).
+//! iGame runtime library.
 //!
-//! Loads a `MapPackage`, instantiates the world, and runs the ECS schedule.
+//! Re-exports key types used by the binary and integration tests.
 
-pub mod world;
+pub mod camera;
+pub mod scene_spawner;
+pub mod state;
 
-pub use world::World;
+use bevy::prelude::Resource;
+use igame_shared::map_package::MapPackage;
+
+/// Bevy resource holding the currently loaded [`MapPackage`].
+#[derive(Resource)]
+pub struct LoadedMap(pub MapPackage);

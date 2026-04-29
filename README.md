@@ -1,10 +1,10 @@
 # iGame
 
-[![CI](https://github.com/dulingzhi/iGame/actions/workflows/ci.yml/badge.svg)](https://github.com/dulingzhi/iGame/actions/workflows/ci.yml)
-
 基于 **Rust / Bevy（ECS）** 构建的数据驱动跨平台游戏引擎，面向桌面端（Desktop）与 Web（wasm），配套提供类似《魔兽争霸III世界编辑器》的 **UGC 编辑器**，让玩家自行制作地图、玩法并发布试玩。
 
-## 项目路线图
+A data-driven, cross-platform UGC game engine and editor built with [Bevy](https://bevyengine.org/) (Rust), inspired by Warcraft III World Editor.
+
+## 项目路线图 / Roadmap
 
 👉 **[查看完整路线图 ROADMAP.md](./ROADMAP.md)**
 
@@ -19,43 +19,103 @@
 
 ---
 
-## Quick start
+## Quick Start / 快速开始
+
+### Prerequisites / 前提条件
+
+- Rust (stable, 1.75+): https://rustup.rs
+- On Linux: `sudo apt-get install libasound2-dev libudev-dev libwayland-dev libxkbcommon-dev`
+
+### Run the Demo Map / 运行 Demo 地图
 
 ```bash
-# Clone
-git clone https://github.com/dulingzhi/iGame.git
-cd iGame
-
-# Run all workspace tests
-cargo test --workspace
-
-# Run Clippy (same flags as CI)
-cargo clippy --workspace --all-targets --all-features -- -D warnings
-
-# Check formatting
-cargo fmt --all -- --check
-
-# Build wasm32-compatible crates
-rustup target add wasm32-unknown-unknown
-cargo build --target wasm32-unknown-unknown -p igame-shared -p igame-runtime
+cargo run -p igame-runtime -- assets/maps/demo
 ```
 
-## Documentation
+Use **WASD** or **Arrow keys** to pan the camera, **mouse scroll** to zoom.
+Press **Escape** to quit.
 
-| Document | Description |
-|----------|-------------|
-| [docs/CONTRIBUTING.md](docs/CONTRIBUTING.md) | Setup, local commands, CI, auto-merge, branch protection |
-| [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) | Architecture, build targets, testing strategy |
-| [ROADMAP.md](ROADMAP.md) | Full milestone plan (M0 → 1.0) |
+### Run All Tests / 运行全部测试
 
-## CI & Auto-merge
+```bash
+cargo test --workspace
+```
 
-Every PR runs four checks automatically: **Rustfmt**, **Clippy**, **Tests**, and a **wasm32 build**.
+### Using the Makefile
 
-To have a PR merged automatically once all checks are green, add the **`automerge`** label.  
-See [docs/CONTRIBUTING.md – Auto-merge](docs/CONTRIBUTING.md#auto-merge-with-the-automerge-label) for full details.
+```bash
+make run        # Run the demo
+make test       # Run all tests
+make check      # Check compilation
+make fmt        # Check formatting
+make clippy     # Run linter
+make wasm-build # Check shared crate compiles for WASM
+```
 
-## License
+---
 
-Licensed under either of [Apache License, Version 2.0](LICENSE-APACHE) or [MIT license](LICENSE-MIT) at your option.
+## Project Structure / 项目结构
 
+```
+iGame/
+├── crates/
+│   ├── shared/     # Core types: MapPackage, Manifest, Scene, validation
+│   ├── runtime/    # Bevy app: loads maps, RTS camera, entity spawning
+│   └── editor/     # Editor (stub – M3 planned)
+├── assets/
+│   └── maps/
+│       └── demo/   # Example map package
+│           ├── manifest.toml
+│           └── scene.ron
+├── ROADMAP.md
+└── Makefile
+```
+
+---
+
+## Map Package Format v0 / 地图包格式
+
+A map package is a directory containing:
+
+- `manifest.toml` – metadata (name, version, author, entry scene path)
+- `scene.ron` – entities with Transform, Sprite, Name, and tags
+
+**Example `manifest.toml`:**
+```toml
+name = "My Map"
+version = "0.1.0"
+author = "You"
+entry_scene = "scene.ron"
+```
+
+**Example `scene.ron`:**
+```ron
+(
+    entities: [
+        (
+            name: Some("Ground"),
+            transform: (
+                translation: (0.0, 0.0, 0.0),
+                rotation: (0.0, 0.0, 0.0, 1.0),
+                scale: (1.0, 1.0, 1.0),
+            ),
+            sprite: Some((
+                color: (0.2, 0.6, 0.2, 1.0),
+                custom_size: Some((800.0, 600.0)),
+            )),
+            tags: ["ground"],
+        ),
+    ],
+)
+```
+
+---
+
+## Definition of Done (M0 + M1) / 验收标准
+
+- [x] Workspace compiles (`cargo check --workspace`)
+- [x] All tests pass (`cargo test --workspace`)
+- [x] Formatting OK (`cargo fmt --all -- --check`)
+- [x] Clippy clean (`cargo clippy --workspace -- -D warnings`)
+- [x] WASM build for shared crate passes
+- [x] Demo map loads and renders (manual verification)

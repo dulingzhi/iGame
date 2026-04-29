@@ -1,12 +1,15 @@
 [package]
 name = "igame-runtime"
-description = "iGame game runtime (desktop + wasm32)"
-edition.workspace = true
 version.workspace = true
+edition.workspace = true
 license.workspace = true
-repository.workspace = true
+description = "iGame runtime: Bevy app that loads and plays map packages"
+
+[[bin]]
+name = "igame"
+path = "src/main.rs"
 
 [dependencies]
-igame-shared = { path = "../shared" }
-
-[dev-dependencies]
+igame-shared = { workspace = true }
+bevy = { workspace = true }
+anyhow = { workspace = true }

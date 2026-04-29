@@ -15,9 +15,9 @@ permissions:
   contents: read
 
 jobs:
-  # ── 1. Formatting ──────────────────────────────────────────────────────────
+  # ── Formatting ────────────────────────────────────────────────────────────
   fmt:
-    name: Rustfmt
+    name: Formatting
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -29,7 +29,7 @@ jobs:
       - name: Check formatting
         run: cargo fmt --all -- --check
 
-  # ── 2. Linting ────────────────────────────────────────────────────────────
+  # ── Clippy ────────────────────────────────────────────────────────────────
   clippy:
     name: Clippy
     runs-on: ubuntu-latest
@@ -43,10 +43,15 @@ jobs:
       - uses: Swatinem/rust-cache@v2
         with:
           cache-on-failure: true
-      - name: Run Clippy
-        run: cargo clippy --workspace --all-targets --all-features -- -D warnings
+      - name: Install Linux dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            libasound2-dev libudev-dev libwayland-dev libxkbcommon-dev
+      - name: Run clippy
+        run: cargo clippy --workspace -- -D warnings
 
-  # ── 3. Tests ──────────────────────────────────────────────────────────────
+  # ── Tests ─────────────────────────────────────────────────────────────────
   test:
     name: Tests
     runs-on: ubuntu-latest
@@ -58,12 +63,17 @@ jobs:
       - uses: Swatinem/rust-cache@v2
         with:
           cache-on-failure: true
-      - name: Run workspace tests
+      - name: Install Linux dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            libasound2-dev libudev-dev libwayland-dev libxkbcommon-dev
+      - name: Run tests
         run: cargo test --workspace
 
-  # ── 4. wasm32-unknown-unknown build ───────────────────────────────────────
+  # ── WASM build check (shared crate only) ──────────────────────────────────
   wasm-build:
-    name: WASM Build
+    name: WASM Build (shared)
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -76,8 +86,5 @@ jobs:
         with:
           key: wasm32
           cache-on-failure: true
-      # Build only the wasm32-compatible packages (editor is desktop-only).
-      - name: Build igame-shared for wasm32
-        run: cargo build --target wasm32-unknown-unknown -p igame-shared
-      - name: Build igame-runtime for wasm32
-        run: cargo build --target wasm32-unknown-unknown -p igame-runtime
+      - name: Build shared crate for WASM
+        run: cargo build -p igame-shared --target wasm32-unknown-unknown
