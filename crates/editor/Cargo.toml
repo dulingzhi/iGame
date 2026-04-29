@@ -1,0 +1,10 @@
+[package]
+name = "igame-editor"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+description = "iGame editor (stub - to be implemented)"
+
+[dependencies]
+igame-shared = { path = "../shared" }

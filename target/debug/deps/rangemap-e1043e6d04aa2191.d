@@ -1,0 +1,12 @@
+/home/runner/work/iGame/iGame/target/debug/deps/rangemap-e1043e6d04aa2191.d: /home/runner/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rangemap-1.7.1/src/lib.rs /home/runner/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rangemap-1.7.1/src/inclusive_map.rs /home/runner/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rangemap-1.7.1/src/inclusive_set.rs /home/runner/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rangemap-1.7.1/src/map.rs /home/runner/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rangemap-1.7.1/src/operations.rs /home/runner/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rangemap-1.7.1/src/set.rs /home/runner/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rangemap-1.7.1/src/range_wrapper.rs /home/runner/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rangemap-1.7.1/src/std_ext.rs
+
+/home/runner/work/iGame/iGame/target/debug/deps/librangemap-e1043e6d04aa2191.rmeta: /home/runner/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rangemap-1.7.1/src/lib.rs /home/runner/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rangemap-1.7.1/src/inclusive_map.rs /home/runner/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rangemap-1.7.1/src/inclusive_set.rs /home/runner/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rangemap-1.7.1/src/map.rs /home/runner/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rangemap-1.7.1/src/operations.rs /home/runner/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rangemap-1.7.1/src/set.rs /home/runner/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rangemap-1.7.1/src/range_wrapper.rs /home/runner/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rangemap-1.7.1/src/std_ext.rs
+
+/home/runner/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rangemap-1.7.1/src/lib.rs:
+/home/runner/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rangemap-1.7.1/src/inclusive_map.rs:
+/home/runner/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rangemap-1.7.1/src/inclusive_set.rs:
+/home/runner/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rangemap-1.7.1/src/map.rs:
+/home/runner/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rangemap-1.7.1/src/operations.rs:
+/home/runner/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rangemap-1.7.1/src/set.rs:
+/home/runner/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rangemap-1.7.1/src/range_wrapper.rs:
+/home/runner/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rangemap-1.7.1/src/std_ext.rs:

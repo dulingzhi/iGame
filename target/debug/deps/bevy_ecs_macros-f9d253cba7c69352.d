@@ -1,0 +1,10 @@
+/home/runner/work/iGame/iGame/target/debug/deps/bevy_ecs_macros-f9d253cba7c69352.d: /home/runner/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/bevy_ecs_macros-0.15.3/src/lib.rs /home/runner/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/bevy_ecs_macros-0.15.3/src/component.rs /home/runner/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/bevy_ecs_macros-0.15.3/src/query_data.rs /home/runner/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/bevy_ecs_macros-0.15.3/src/query_filter.rs /home/runner/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/bevy_ecs_macros-0.15.3/src/states.rs /home/runner/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/bevy_ecs_macros-0.15.3/src/world_query.rs
+
+/home/runner/work/iGame/iGame/target/debug/deps/libbevy_ecs_macros-f9d253cba7c69352.so: /home/runner/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/bevy_ecs_macros-0.15.3/src/lib.rs /home/runner/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/bevy_ecs_macros-0.15.3/src/component.rs /home/runner/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/bevy_ecs_macros-0.15.3/src/query_data.rs /home/runner/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/bevy_ecs_macros-0.15.3/src/query_filter.rs /home/runner/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/bevy_ecs_macros-0.15.3/src/states.rs /home/runner/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/bevy_ecs_macros-0.15.3/src/world_query.rs
+
+/home/runner/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/bevy_ecs_macros-0.15.3/src/lib.rs:
+/home/runner/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/bevy_ecs_macros-0.15.3/src/component.rs:
+/home/runner/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/bevy_ecs_macros-0.15.3/src/query_data.rs:
+/home/runner/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/bevy_ecs_macros-0.15.3/src/query_filter.rs:
+/home/runner/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/bevy_ecs_macros-0.15.3/src/states.rs:
+/home/runner/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/bevy_ecs_macros-0.15.3/src/world_query.rs:

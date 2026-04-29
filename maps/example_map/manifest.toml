@@ -1,0 +1,10 @@
+schema_version = 1
+
+[map]
+id = "example_map"
+name = "示例地图 / Example Map"
+version = "0.1.0"
+author = "dulingzhi"
+engine_min_version = "0.1.0"
+entry_scene = "scene/main.json"
+description = "A minimal example map for testing the iGame runtime."
