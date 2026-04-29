@@ -3,35 +3,12 @@ name        = "igame-editor"
 version.workspace    = true
 edition.workspace    = true
 license.workspace    = true
-repository.workspace = true
-description = "egui-based map editor for iGame (stub)"
+description = "iGame editor (stub — see ROADMAP.md for M3 plans)"
 
 [[bin]]
 name = "igame-editor"
 path = "src/main.rs"
 
 [dependencies]
-igame-shared  = { path = "../shared" }
-igame-runtime = { path = "../runtime" }
-
-bevy = { version = "0.15", default-features = false, features = [
-    "bevy_asset",
-    "bevy_color",
-    "bevy_core_pipeline",
-    "bevy_pbr",
-    "bevy_render",
-    "bevy_sprite",
-    "bevy_state",
-    "bevy_text",
-    "bevy_ui",
-    "bevy_winit",
-    "default_font",
-    "multi_threaded",
-    "png",
-    "tonemapping_luts",
-    "x11",
-    "wayland",
-] }
-
-serde_json = { workspace = true }
-toml       = { workspace = true }
+igame-shared = { workspace = true }
+anyhow       = { workspace = true }

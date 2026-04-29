@@ -1,72 +1,79 @@
-//! Map package loader — reads `MapPackage` data and spawns Bevy entities.
+//! `MapLoaderPlugin` — loads a [`MapPackage`] from strings and populates
+//! `SpawnedEntities`.  Used primarily by integration tests and the editor
+//! where the package content is already in memory.
 
 use bevy::prelude::*;
-use igame_shared::{MapPackage, SceneData};
+use igame_shared::map_package::MapPackage;
 
-/// Resource holding the fully parsed map package.
-#[derive(Resource)]
-pub struct LoadedMap {
-    pub package: MapPackage,
-}
+use crate::LoadedMap;
 
-/// Resource populated after entities have been spawned.
+/// Resource populated after entities have been spawned from the scene.
 #[derive(Resource, Default)]
 pub struct SpawnedEntities {
     pub entities: Vec<Entity>,
 }
 
-/// Plugin that registers the map-loader systems.
+/// Plugin that loads a map package from in-memory strings and spawns entities.
+///
+/// Useful for headless integration tests and the editor where files are
+/// already in memory.
 pub struct MapLoaderPlugin {
-    /// Raw TOML text of `manifest.toml`.
+    /// TOML text of `manifest.toml`.
     pub manifest_toml: String,
-    /// Raw JSON text of `scene.json`.
-    pub scene_json: String,
+    /// RON text of the scene file.
+    pub scene_ron: String,
 }
 
 impl Plugin for MapLoaderPlugin {
     fn build(&self, app: &mut App) {
-        let package = MapPackage::from_strings(&self.manifest_toml, &self.scene_json)
-            .expect("failed to load map package");
+        let package = MapPackage::from_strings(&self.manifest_toml, &self.scene_ron)
+            .expect("MapLoaderPlugin: failed to parse map package");
 
-        app.insert_resource(LoadedMap { package })
+        app.insert_resource(LoadedMap(package))
             .init_resource::<SpawnedEntities>()
             .add_systems(Startup, spawn_scene_entities);
     }
 }
 
-/// Spawns entities described in `scene.json`.
+/// Spawns entities from the loaded [`MapPackage`] scene.
 fn spawn_scene_entities(
     mut commands: Commands,
     loaded: Res<LoadedMap>,
     mut spawned: ResMut<SpawnedEntities>,
 ) {
-    let scene: &SceneData = &loaded.package.scene;
-
-    for descriptor in &scene.entities {
+    for descriptor in &loaded.0.scene.entities {
         let t = &descriptor.transform;
-        let translation = Vec3::from_array(t.translation);
-        let rotation = Quat::from_array(t.rotation);
-        let scale = Vec3::from_array(t.scale);
+        let mut entity_cmds = commands.spawn((
+            Transform {
+                translation: Vec3::from_array(t.translation),
+                rotation: Quat::from_array(t.rotation),
+                scale: Vec3::from_array(t.scale),
+            },
+            Visibility::default(),
+        ));
 
-        let entity = commands
-            .spawn((
-                Name::new(descriptor.name.clone()),
-                Transform {
-                    translation,
-                    rotation,
-                    scale,
-                },
-                Visibility::default(),
-            ))
-            .id();
+        if let Some(ref name) = descriptor.name {
+            entity_cmds.insert(Name::new(name.clone()));
+        }
 
-        spawned.entities.push(entity);
+        if let Some(ref sprite_data) = descriptor.sprite {
+            let [r, g, b, a] = sprite_data.color;
+            let color = Color::srgba(r, g, b, a);
+            let custom_size = sprite_data.custom_size.map(|[w, h]| Vec2::new(w, h));
+            entity_cmds.insert(Sprite {
+                color,
+                custom_size,
+                ..default()
+            });
+        }
+
+        spawned.entities.push(entity_cmds.id());
     }
 
     info!(
-        "MapLoader: spawned {} entities from scene '{}'",
+        "MapLoader: spawned {} entities from '{}'",
         spawned.entities.len(),
-        loaded.package.manifest.name
+        loaded.0.manifest.name
     );
 }
 
@@ -78,27 +85,41 @@ mod tests {
 name        = "Unit Test Map"
 version     = "0.1.0"
 author      = "Tests"
+entry_scene = "scene.ron"
 "#;
 
-    const SCENE: &str = r#"{
-        "entities": [
-            {
-                "name": "Alpha",
-                "transform": { "translation": [1.0, 0.0, 0.0] }
-            },
-            {
-                "name": "Beta",
-                "transform": { "translation": [0.0, 2.0, 0.0] }
-            }
-        ]
-    }"#;
+    // RON scene with two simple entities.
+    const SCENE: &str = r#"(
+        entities: [
+            (
+                name: Some("Alpha"),
+                transform: (
+                    translation: (1.0, 0.0, 0.0),
+                    rotation:    (0.0, 0.0, 0.0, 1.0),
+                    scale:       (1.0, 1.0, 1.0),
+                ),
+                sprite: None,
+                tags: [],
+            ),
+            (
+                name: Some("Beta"),
+                transform: (
+                    translation: (0.0, 2.0, 0.0),
+                    rotation:    (0.0, 0.0, 0.0, 1.0),
+                    scale:       (1.0, 1.0, 1.0),
+                ),
+                sprite: None,
+                tags: [],
+            ),
+        ],
+    )"#;
 
     fn build_test_app() -> App {
         let mut app = App::new();
         app.add_plugins(MinimalPlugins);
         app.add_plugins(MapLoaderPlugin {
             manifest_toml: MANIFEST.to_string(),
-            scene_json: SCENE.to_string(),
+            scene_ron: SCENE.to_string(),
         });
         app
     }
@@ -107,7 +128,6 @@ author      = "Tests"
     fn entities_are_spawned() {
         let mut app = build_test_app();
         app.update();
-
         let spawned = app.world().resource::<SpawnedEntities>();
         assert_eq!(spawned.entities.len(), 2);
     }
@@ -151,6 +171,6 @@ author      = "Tests"
         app.update();
 
         let loaded = app.world().resource::<LoadedMap>();
-        assert_eq!(loaded.package.manifest.name, "Unit Test Map");
+        assert_eq!(loaded.0.manifest.name, "Unit Test Map");
     }
 }

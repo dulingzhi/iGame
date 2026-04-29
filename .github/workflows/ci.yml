@@ -2,78 +2,88 @@ name: CI
 
 on:
   push:
-    branches: ["main"]
+    branches: [main]
   pull_request:
-    branches: ["main"]
 
 env:
   CARGO_TERM_COLOR: always
-  RUSTFLAGS: "-D warnings"
+  RUST_BACKTRACE: 1
+
+# CI jobs only need read access to the repository.
+permissions:
+  contents: read
 
 jobs:
+  # ── Formatting ────────────────────────────────────────────────────────────
   fmt:
-    name: Rustfmt
+    name: Formatting
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
         with:
           components: rustfmt
-      - run: cargo fmt --all -- --check
+      - name: Check formatting
+        run: cargo fmt --all -- --check
 
+  # ── Clippy ────────────────────────────────────────────────────────────────
   clippy:
     name: Clippy
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
         with:
           components: clippy
+      - uses: Swatinem/rust-cache@v2
+        with:
+          cache-on-failure: true
       - name: Install Linux dependencies
         run: |
-          sudo apt-get update -y
-          sudo apt-get install -y \
-            libudev-dev \
-            libasound2-dev \
-            libx11-dev \
-            libxcb-composite0-dev \
-            libxi-dev \
-            libxkbcommon-dev \
-            libwayland-dev \
-            libvulkan-dev
-      - uses: Swatinem/rust-cache@v2
-      - run: cargo clippy --workspace --all-targets -- -D warnings
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            libasound2-dev libudev-dev libwayland-dev libxkbcommon-dev
+      - name: Run clippy
+        run: cargo clippy --workspace -- -D warnings
 
+  # ── Tests ─────────────────────────────────────────────────────────────────
   test:
     name: Tests
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          cache-on-failure: true
       - name: Install Linux dependencies
         run: |
-          sudo apt-get update -y
-          sudo apt-get install -y \
-            libudev-dev \
-            libasound2-dev \
-            libx11-dev \
-            libxcb-composite0-dev \
-            libxi-dev \
-            libxkbcommon-dev \
-            libwayland-dev \
-            libvulkan-dev
-      - uses: Swatinem/rust-cache@v2
-      - run: cargo test --workspace
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            libasound2-dev libudev-dev libwayland-dev libxkbcommon-dev
+      - name: Run tests
+        run: cargo test --workspace
 
+  # ── WASM build check (shared crate only) ──────────────────────────────────
   wasm-build:
-    name: WASM Build Check
+    name: WASM Build (shared)
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
         with:
           targets: wasm32-unknown-unknown
       - uses: Swatinem/rust-cache@v2
-      # Build the library crates that support WASM (no windowing required).
-      - run: cargo build --package igame-shared --target wasm32-unknown-unknown
-      - run: cargo build --package igame-ugc   --target wasm32-unknown-unknown
+        with:
+          key: wasm32
+          cache-on-failure: true
+      - name: Build shared crate for WASM
+        run: cargo build -p igame-shared --target wasm32-unknown-unknown

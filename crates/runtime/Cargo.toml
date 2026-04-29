@@ -3,8 +3,7 @@ name        = "igame-runtime"
 version.workspace    = true
 edition.workspace    = true
 license.workspace    = true
-repository.workspace = true
-description = "Bevy-based game runtime for iGame"
+description = "iGame runtime: Bevy app that loads and plays map packages"
 
 [[bin]]
 name = "igame"
@@ -15,37 +14,6 @@ name = "igame_runtime"
 path = "src/lib.rs"
 
 [dependencies]
-igame-shared = { path = "../shared" }
-
-bevy = { version = "0.15", default-features = false, features = [
-    "bevy_asset",
-    "bevy_color",
-    "bevy_core_pipeline",
-    "bevy_pbr",
-    "bevy_render",
-    "bevy_sprite",
-    "bevy_state",
-    "bevy_text",
-    "bevy_ui",
-    "bevy_winit",
-    "default_font",
-    "multi_threaded",
-    "png",
-    "tonemapping_luts",
-    "x11",
-    "wayland",
-] }
-
-serde_json = { workspace = true }
-toml       = { workspace = true }
-log        = { workspace = true }
-
-[dev-dependencies]
-bevy = { version = "0.15", default-features = false, features = [
-    "bevy_asset",
-    "bevy_color",
-    "bevy_pbr",
-    "bevy_render",
-    "bevy_sprite",
-    "multi_threaded",
-] }
+igame-shared = { workspace = true }
+bevy         = { workspace = true }
+anyhow       = { workspace = true }

@@ -2,14 +2,17 @@
 
 use bevy::prelude::*;
 
-/// Top-level game states.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default, States)]
-pub enum GameState {
-    /// Assets and map are being loaded.
+/// Top-level application states.
+#[derive(States, Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
+pub enum AppState {
+    /// Loading assets and map data.
     #[default]
     Loading,
-    /// Map is loaded; gameplay is running.
+    /// In-game / playing.
     Playing,
     /// Game is paused (editor or in-game menu).
     Paused,
 }
+
+// Alias for code that was written using the old `GameState` name.
+pub type GameState = AppState;

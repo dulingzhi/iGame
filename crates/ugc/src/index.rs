@@ -1,6 +1,6 @@
 //! Package index — a list of available map packages.
 
-use igame_shared::MapManifest;
+use igame_shared::Manifest;
 use serde::{Deserialize, Serialize};
 
 /// A single entry in the package index.
@@ -9,7 +9,7 @@ pub struct MapEntry {
     /// Unique identifier (e.g. `"author/map-name"`).
     pub id: String,
     /// Parsed manifest for display / compatibility checks.
-    pub manifest: MapManifest,
+    pub manifest: Manifest,
     /// Download URL or local filesystem path.
     pub source: String,
 }
@@ -46,14 +46,15 @@ impl PackageIndex {
 mod tests {
     use super::*;
 
-    fn make_manifest(name: &str) -> MapManifest {
-        MapManifest {
+    fn make_manifest(name: &str) -> Manifest {
+        Manifest {
             name: name.to_string(),
             version: "0.1.0".to_string(),
-            author: "Test".to_string(),
-            description: String::new(),
-            engine_min: "0.1.0".to_string(),
-            entry_scene: "scene.json".to_string(),
+            author: Some("Test".to_string()),
+            description: None,
+            engine_version_min: Some("0.1.0".to_string()),
+            entry_scene: "scene.ron".to_string(),
+            preview_image: None,
         }
     }
 

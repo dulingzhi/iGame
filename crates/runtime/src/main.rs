@@ -1,93 +1,35 @@
-//! iGame runtime — demo entry point.
+//! iGame runtime binary entry point.
 //!
-//! Run with: `cargo run -p igame-runtime`
+//! Usage: `igame [path/to/map/package]`
 //!
-//! Controls:
-//!   WASD / Arrow keys — pan camera
-//!   Q / E             — rotate camera
-//!   Scroll wheel      — zoom
-//!   Esc               — quit
+//! Defaults to `assets/maps/demo` if no argument is given.
 
-use bevy::{
-    prelude::*,
-    window::{PresentMode, WindowResolution},
-};
-use igame_runtime::camera::spawn_rts_camera;
-use igame_runtime::{GameState, MapLoaderPlugin, RtsCameraPlugin};
-
-const MANIFEST_TOML: &str = include_str!("../../../examples/demo_map/manifest.toml");
-const SCENE_JSON: &str = include_str!("../../../examples/demo_map/scene.json");
+use bevy::prelude::*;
+use igame_runtime::{camera::RtsCameraPlugin, scene_spawner::SceneSpawnerPlugin, state::AppState};
+use igame_shared::map_package::MapPackage;
+use std::path::PathBuf;
 
 fn main() {
+    let map_path = std::env::args()
+        .nth(1)
+        .unwrap_or_else(|| "assets/maps/demo".to_string());
+
+    let package = MapPackage::load(&PathBuf::from(&map_path))
+        .unwrap_or_else(|e| panic!("Failed to load map package at '{map_path}': {e}"));
+
+    let window_title = format!("iGame — {}", package.manifest.name);
+
     App::new()
-        .add_plugins(
-            DefaultPlugins
-                .set(WindowPlugin {
-                    primary_window: Some(Window {
-                        title: "iGame — Demo".to_string(),
-                        resolution: WindowResolution::new(1280.0, 720.0),
-                        present_mode: PresentMode::AutoVsync,
-                        ..default()
-                    }),
-                    ..default()
-                })
-                .set(AssetPlugin {
-                    file_path: "../../".to_string(),
-                    ..default()
-                }),
-        )
-        .init_state::<GameState>()
-        .add_plugins(MapLoaderPlugin {
-            manifest_toml: MANIFEST_TOML.to_string(),
-            scene_json: SCENE_JSON.to_string(),
-        })
-        .add_plugins(RtsCameraPlugin)
-        .add_systems(Startup, setup_scene)
-        .add_systems(Update, quit_on_esc)
+        .add_plugins(DefaultPlugins.set(WindowPlugin {
+            primary_window: Some(Window {
+                title: window_title,
+                resolution: (1280.0, 720.0).into(),
+                ..default()
+            }),
+            ..default()
+        }))
+        .insert_resource(igame_runtime::LoadedMap(package))
+        .init_state::<AppState>()
+        .add_plugins((RtsCameraPlugin, SceneSpawnerPlugin))
         .run();
-}
-
-/// Set up lighting and spawn the RTS camera.
-fn setup_scene(
-    mut commands: Commands,
-    mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<StandardMaterial>>,
-) {
-    // RTS camera
-    spawn_rts_camera(&mut commands);
-
-    // Ambient light
-    commands.insert_resource(AmbientLight {
-        color: Color::WHITE,
-        brightness: 0.3,
-    });
-
-    // Directional sun light
-    commands.spawn((
-        DirectionalLight {
-            illuminance: 15_000.0,
-            shadows_enabled: true,
-            ..default()
-        },
-        Transform::from_xyz(8.0, 16.0, 8.0).looking_at(Vec3::ZERO, Vec3::Y),
-    ));
-
-    // Ground plane (visual only — map entities are spawned by MapLoader)
-    commands.spawn((
-        Mesh3d(meshes.add(Plane3d::default().mesh().size(50.0, 50.0))),
-        MeshMaterial3d(materials.add(StandardMaterial {
-            base_color: Color::srgb(0.25, 0.45, 0.2),
-            perceptual_roughness: 0.9,
-            ..default()
-        })),
-        Name::new("_GroundPlane"),
-    ));
-
-    info!("Demo scene ready.");
-}
-
-fn quit_on_esc(keyboard: Res<ButtonInput<KeyCode>>, mut app_exit: EventWriter<AppExit>) {
-    if keyboard.just_pressed(KeyCode::Escape) {
-        app_exit.send(AppExit::Success);
-    }
 }

@@ -1,155 +1,146 @@
 # iGame
 
-> **A Bevy-based UGC game engine and map editor** — think Warcraft III World Editor, but built in Rust with a data-driven ECS architecture, targeting Desktop and Web (wasm).
-
 [![CI](https://github.com/dulingzhi/iGame/actions/workflows/ci.yml/badge.svg)](https://github.com/dulingzhi/iGame/actions/workflows/ci.yml)
 
+基于 **Rust / Bevy（ECS）** 构建的数据驱动跨平台游戏引擎，面向桌面端（Desktop）与 Web（wasm），配套提供类似《魔兽争霸III世界编辑器》的 **UGC 编辑器**，让玩家自行制作地图、玩法并发布试玩。
+
+A data-driven, cross-platform UGC game engine and editor built with [Bevy](https://bevyengine.org/) (Rust), inspired by Warcraft III World Editor.
+
+## 项目路线图 / Roadmap
+
+👉 **[查看完整路线图 ROADMAP.md](./ROADMAP.md)**
+
+路线图涵盖：
+- 项目目标与非目标
+- 总体架构建议（Runtime / Editor / UGC 平台分层）
+- 里程碑 M0 ~ M10（目标、验收标准 DoD、关键风险）
+- 功能清单 Checklist（运行时、地图包、编辑器、触发器、UGC 分发、工程质量）
+- 触发器系统 MVP 节点清单（20 个事件/条件/动作节点）
+- GitHub 项目管理建议（Milestones + Labels）
+- 垂直切片验收样例地图
+
 ---
 
-## Project Status
+## Quick Start / 快速开始
 
-| Milestone | Status |
-|-----------|--------|
-| M0 — Workspace skeleton & CI | ✅ Done |
-| M1 — Runtime MVP (2D/3D + RTS Camera + Demo) | ✅ Done |
-| M2 — MapPackage v0 (manifest.toml + scene.json) | ✅ Done |
-| M3 — Editor MVP (egui Viewport/Inspector) | 🔜 Planned |
-| M4 — Trigger system (visual ECA node graph) | 🔜 Planned |
-| M5 — Web play & content distribution | 🔜 Planned |
+### Prerequisites / 前提条件
 
-See [ROADMAP.md](ROADMAP.md) for the full roadmap.
+- Rust (stable, 1.75+): https://rustup.rs
+- On Linux: `sudo apt-get install libasound2-dev libudev-dev libwayland-dev libxkbcommon-dev`
+
+### Run the Demo Map / 运行 Demo 地图
+
+```bash
+cargo run -p igame-runtime -- assets/maps/demo
+```
+
+Use **WASD** or **Arrow keys** to pan the camera, **mouse scroll** to zoom.
+Press **Escape** to quit.
+
+### Run All Tests / 运行全部测试
+
+```bash
+cargo test --workspace
+```
+
+### Using the Makefile
+
+```bash
+make run        # Run the demo
+make test       # Run all tests
+make check      # Check compilation
+make fmt        # Check formatting
+make clippy     # Run linter
+make wasm-build # Check shared crate compiles for WASM
+```
 
 ---
 
-## Repository Layout
+## Project Structure / 项目结构
 
 ```
 iGame/
-├── Cargo.toml               # Workspace root
 ├── crates/
-│   ├── shared/              # Data types, serialization, validation (no Bevy dep)
-│   ├── runtime/             # Bevy runtime: map loading, RTS camera, demo app
-│   ├── editor/              # Map editor stub (full egui editor in M3)
-│   └── ugc/                 # UGC package management stub (M6)
-├── examples/
-│   └── demo_map/
-│       ├── manifest.toml    # Map package metadata
-│       └── scene.json       # Entities & components
-├── docs/                    # Design documents
-└── .github/workflows/ci.yml # CI: fmt / clippy / test / wasm build
+│   ├── shared/     # Core types: MapPackage, Manifest, Scene, validation
+│   ├── runtime/    # Bevy app: loads maps, RTS camera, entity spawning
+│   └── editor/     # Editor (stub – M3 planned)
+├── assets/
+│   └── maps/
+│       └── demo/   # Example map package
+│           ├── manifest.toml
+│           └── scene.ron
+├── ROADMAP.md
+└── Makefile
 ```
 
 ---
 
-## Quick Start
+## Map Package Format v0 / 地图包格式
 
-### Prerequisites
+A map package is a directory containing:
 
-- **Rust** 1.75+ (2021 edition)  
-- On Linux: `sudo apt-get install libudev-dev libasound2-dev libx11-dev libxkbcommon-dev libwayland-dev`
+- `manifest.toml` – metadata (name, version, author, entry scene path)
+- `scene.ron` – entities with Transform, Sprite, Name, and tags
 
-### Run the demo
-
-```bash
-# Clone
-git clone https://github.com/dulingzhi/iGame
-cd iGame
-
-# Run runtime demo (opens a 3D window)
-cargo run -p igame-runtime
-
-# Run editor stub
-cargo run -p igame-editor
-```
-
-**Demo Controls:**
-
-| Input | Action |
-|-------|--------|
-| `W/A/S/D` or Arrow keys | Pan camera |
-| `Q / E` | Rotate camera |
-| Scroll wheel | Zoom in / out |
-| Middle-mouse drag | Pan (mouse) |
-| `Esc` | Quit |
-
----
-
-## Running Tests
-
-```bash
-# All tests (unit + integration)
-cargo test --workspace
-
-# Specific crate
-cargo test -p igame-shared
-cargo test -p igame-runtime
-cargo test -p igame-ugc
-
-# Run integration tests only
-cargo test -p igame-runtime --test integration_map_load
-```
-
-### What the tests cover
-
-| Crate | Tests |
-|-------|-------|
-| `igame-shared` | Manifest parsing, scene JSON (de)serialization, trigger graph round-trip, validation |
-| `igame-runtime` (unit) | Map entity spawning, RTS camera setup |
-| `igame-runtime` (integration) | Load `demo_map` → run ticks → assert entities/components |
-| `igame-ugc` | Package index CRUD |
-
----
-
-## Map Package Format
-
-Map packages live in a directory (or `.zip`) with this structure:
-
-```
-my_map/
-├── manifest.toml    # Metadata (name, version, author, …)
-├── scene.json       # Entity + component tree
-└── triggers/        # (M4) ECA trigger graphs in JSON
-```
-
-**`manifest.toml` example:**
-
+**Example `manifest.toml`:**
 ```toml
-name        = "My Map"
-version     = "0.1.0"
-author      = "You"
-description = "A demo map"
-engine_min  = "0.1.0"
-entry_scene = "scene.json"
+name = "My Map"
+version = "0.1.0"
+author = "You"
+entry_scene = "scene.ron"
 ```
 
-**`scene.json` example:**
-
-```json
-{
-  "entities": [
-    {
-      "name": "Ground",
-      "transform": { "scale": [20.0, 1.0, 20.0] },
-      "components": [{ "type": "mesh", "mesh_ref": "plane" }]
-    }
-  ]
-}
+**Example `scene.ron`:**
+```ron
+(
+    entities: [
+        (
+            name: Some("Ground"),
+            transform: (
+                translation: (0.0, 0.0, 0.0),
+                rotation: (0.0, 0.0, 0.0, 1.0),
+                scale: (1.0, 1.0, 1.0),
+            ),
+            sprite: Some((
+                color: (0.2, 0.6, 0.2, 1.0),
+                custom_size: Some((800.0, 600.0)),
+            )),
+            tags: ["ground"],
+        ),
+    ],
+)
 ```
 
 ---
 
-## Acceptance Checklist (M0–M2)
+## Definition of Done (M0 + M1) / 验收标准
 
-- [x] `cargo test --workspace` — all tests pass
-- [x] `cargo clippy --workspace --all-targets` — no warnings
-- [x] `cargo fmt --all -- --check` — no formatting issues
-- [x] `cargo run -p igame-runtime` — opens a 3D window with demo map
-- [x] Demo map loads 4 entities (Ground, PlayerStart, EnemyCamp, ResourceNode)
-- [x] Integration tests assert entity names, transforms, component counts
+- [x] Workspace compiles (`cargo check --workspace`)
+- [x] All tests pass (`cargo test --workspace`)
+- [x] Formatting OK (`cargo fmt --all -- --check`)
+- [x] Clippy clean (`cargo clippy --workspace -- -D warnings`)
+- [x] WASM build for shared crate passes
+- [x] Demo map loads and renders (manual verification)
 
 ---
 
-## Contributing
+## CI & Auto-merge / 持续集成与自动合并
 
-See [TESTING.md](TESTING.md) for the test strategy and how to add new tests.
-See [ROADMAP.md](ROADMAP.md) for the full development plan.
+Every pull request automatically runs four checks (fmt, clippy, tests, wasm
+build). When all checks pass **auto-merge is enabled automatically** — no label
+required.
+
+**Opt out of auto-merge:**
+- Mark the PR as a **draft**, or
+- Add the **`do-not-merge`** label.
+
+See [docs/CI_AND_AUTOMERGE.md](docs/CI_AND_AUTOMERGE.md) for the full policy
+and the one-time repository settings required (Allow auto-merge, branch
+protections).
+
+---
+
+## Testing Guide / 测试指南
+
+See [TESTING.md](TESTING.md) for the full test strategy, how to run specific
+test suites, and conventions for adding new tests.
