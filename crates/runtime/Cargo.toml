@@ -1,0 +1,8 @@
+[package]
+name = "igame-runtime"
+version = "0.1.0"
+edition = "2021"
+description = "iGame runtime engine"
+
+[dependencies]
+igame-shared = { path = "../shared" }
