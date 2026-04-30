@@ -4,47 +4,111 @@ on:
   push:
     branches: [main, 'copilot/**']
   pull_request:
-    branches: [main]
+
+env:
+  CARGO_TERM_COLOR: always
+  RUST_BACKTRACE: 1
+
+# CI jobs only need read access to the repository.
+permissions:
+  contents: read
 
 jobs:
-  check:
+  # ── Formatting ────────────────────────────────────────────────────────────
+  fmt:
+    name: Formatting
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@v4
-
       - uses: dtolnay/rust-toolchain@stable
         with:
-          components: rustfmt, clippy
-          targets: wasm32-unknown-unknown
-
-      - uses: Swatinem/rust-cache@v2
-
-      - name: Install system deps
-        run: |
-          sudo apt-get update -y
-          sudo apt-get install -y \
-            libasound2-dev \
-            libwayland-dev \
-            libxi-dev \
-            libx11-dev \
-            libxcb-render0-dev \
-            libxcb-shape0-dev \
-            libxcb-xfixes0-dev \
-            libxkbcommon-dev \
-            libgl1-mesa-dev \
-            libegl1-mesa-dev
-
-      - name: fmt
+          components: rustfmt
+      - name: Check formatting
         run: cargo fmt --all -- --check
 
-      - name: clippy (runtime)
-        run: cargo clippy --package igame_runtime -- -D warnings
+  # ── Clippy ────────────────────────────────────────────────────────────────
+  clippy:
+    name: Clippy
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
+      - uses: Swatinem/rust-cache@v2
+        with:
+          cache-on-failure: true
+      - name: Install Linux dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            libasound2-dev libudev-dev libwayland-dev libxkbcommon-dev \
+            libxi-dev libx11-dev libxkbcommon-dev
+      - name: Run clippy
+        run: cargo clippy --workspace -- -D warnings
 
-      - name: test (runtime)
-        run: cargo test --package igame_runtime
+  # ── Tests ─────────────────────────────────────────────────────────────────
+  test:
+    name: Tests
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          cache-on-failure: true
+      - name: Install Linux dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            libasound2-dev libudev-dev libwayland-dev libxkbcommon-dev \
+            libxi-dev libx11-dev
+      - name: Run tests
+        run: cargo test --workspace
 
-      - name: check (editor)
+  # ── Editor check (no display needed) ──────────────────────────────────────
+  editor-check:
+    name: Editor Check
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          cache-on-failure: true
+      - name: Install Linux dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            libasound2-dev libudev-dev libwayland-dev libxkbcommon-dev \
+            libxi-dev libx11-dev
+      - name: Check editor compiles
         run: cargo check --package igame_editor
 
-      - name: wasm check (runtime)
+  # ── WASM build check ──────────────────────────────────────────────────────
+  wasm-build:
+    name: WASM Build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: wasm32
+          cache-on-failure: true
+      - name: Build shared crate for WASM
+        run: cargo build -p igame-shared --target wasm32-unknown-unknown
+      - name: Check runtime math library for WASM
         run: cargo check --package igame_runtime --target wasm32-unknown-unknown

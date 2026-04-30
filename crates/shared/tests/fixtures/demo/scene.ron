@@ -1,0 +1,43 @@
+(
+    entities: [
+        (
+            name: Some("Ground"),
+            transform: (
+                translation: (0.0, 0.0, 0.0),
+                rotation: (0.0, 0.0, 0.0, 1.0),
+                scale: (1.0, 1.0, 1.0),
+            ),
+            sprite: Some((
+                color: (0.2, 0.6, 0.2, 1.0),
+                custom_size: Some((800.0, 600.0)),
+            )),
+            tags: ["ground"],
+        ),
+        (
+            name: Some("Unit 1"),
+            transform: (
+                translation: (-100.0, 0.0, 1.0),
+                rotation: (0.0, 0.0, 0.0, 1.0),
+                scale: (1.0, 1.0, 1.0),
+            ),
+            sprite: Some((
+                color: (0.2, 0.4, 0.8, 1.0),
+                custom_size: Some((40.0, 40.0)),
+            )),
+            tags: ["unit", "player"],
+        ),
+        (
+            name: Some("Unit 2"),
+            transform: (
+                translation: (100.0, 0.0, 1.0),
+                rotation: (0.0, 0.0, 0.0, 1.0),
+                scale: (1.0, 1.0, 1.0),
+            ),
+            sprite: Some((
+                color: (0.8, 0.2, 0.2, 1.0),
+                custom_size: Some((40.0, 40.0)),
+            )),
+            tags: ["unit", "enemy"],
+        ),
+    ],
+)
