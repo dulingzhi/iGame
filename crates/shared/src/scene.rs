@@ -1,77 +1,60 @@
-//! MapPackage scene (scene/main.json) data structures.
+//! Scene data — the entity/component tree (serialised as RON in `scene.ron`).
 
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 
-/// Current schema version for scene JSON files
-pub const SCHEMA_VERSION: u32 = 1;
-
-/// Root structure of a scene JSON file
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-pub struct SceneData {
-    /// Schema version for compat checks
-    pub schema_version: u32,
-    /// List of entities in this scene
-    #[serde(default)]
+/// The full scene graph for a map.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct MapScene {
+    /// All entities that make up this scene.
     pub entities: Vec<EntityData>,
 }
 
-/// An entity in the scene
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+/// Data for a single entity in the scene.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct EntityData {
-    /// Unique identifier within this scene
-    pub id: String,
-    /// Optional human-readable name
-    #[serde(default)]
+    /// Optional display name for this entity.
     pub name: Option<String>,
-    /// World-space transform
-    #[serde(default)]
+
+    /// Position, rotation, and scale.
     pub transform: TransformData,
-    /// Additional components as arbitrary JSON
+
+    /// Optional 2D sprite component.
+    pub sprite: Option<SpriteData>,
+
+    /// Logical tags (e.g. "unit", "ground", "player").
     #[serde(default)]
-    pub components: HashMap<String, serde_json::Value>,
+    pub tags: Vec<String>,
 }
 
-/// World-space transform for an entity
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+/// Serializable form of a 3D transform.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct TransformData {
-    /// XYZ translation
-    #[serde(default)]
+    /// (x, y, z) translation.
     pub translation: [f32; 3],
-    /// Uniform/non-uniform scale
-    #[serde(default = "default_scale")]
-    pub scale: [f32; 3],
-    /// Rotation as XYZW quaternion
-    #[serde(default = "default_rotation")]
+
+    /// (x, y, z, w) quaternion rotation.
     pub rotation: [f32; 4],
+
+    /// (x, y, z) scale factors.
+    pub scale: [f32; 3],
 }
 
 impl Default for TransformData {
     fn default() -> Self {
         Self {
             translation: [0.0, 0.0, 0.0],
-            scale: [1.0, 1.0, 1.0],
             rotation: [0.0, 0.0, 0.0, 1.0],
+            scale: [1.0, 1.0, 1.0],
         }
     }
 }
 
-fn default_scale() -> [f32; 3] {
-    [1.0, 1.0, 1.0]
-}
+/// Serializable 2D sprite data.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct SpriteData {
+    /// RGBA color in linear [0, 1] range.
+    pub color: [f32; 4],
 
-fn default_rotation() -> [f32; 4] {
-    [0.0, 0.0, 0.0, 1.0]
-}
-
-impl SceneData {
-    /// Parse a scene from JSON text
-    pub fn from_json_str(s: &str) -> Result<Self, serde_json::Error> {
-        serde_json::from_str(s)
-    }
-
-    /// Serialize to pretty JSON text
-    pub fn to_json_string(&self) -> Result<String, serde_json::Error> {
-        serde_json::to_string_pretty(self)
-    }
+    /// Optional explicit size in logical pixels; `None` uses the texture size.
+    pub custom_size: Option<[f32; 2]>,
 }

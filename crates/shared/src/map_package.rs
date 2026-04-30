@@ -1,30 +1,42 @@
-//! MapPackage: a loaded map consisting of manifest + scene data.
+//! Map package — top-level container for manifest + scene data.
 
-use crate::manifest::MapManifest;
-use crate::scene::SceneData;
-use crate::validation::{validate_manifest, validate_scene, ValidationError};
-use anyhow::{Context, Result};
+use std::path::Path;
 
-/// A fully loaded and validated map package
+use crate::{error::MapPackageError, manifest::Manifest, scene::MapScene};
+
+/// A fully-loaded map package, ready to be instantiated by the runtime.
 #[derive(Debug, Clone)]
 pub struct MapPackage {
-    pub manifest: MapManifest,
-    pub scene: SceneData,
+    /// Package metadata.
+    pub manifest: Manifest,
+
+    /// Scene entities and their components.
+    pub scene: MapScene,
 }
 
 impl MapPackage {
-    /// Load a MapPackage from manifest TOML text and scene JSON text.
-    pub fn from_str(manifest_toml: &str, scene_json: &str) -> Result<Self> {
-        let manifest =
-            MapManifest::from_toml_str(manifest_toml).context("failed to parse manifest.toml")?;
-        let scene = SceneData::from_json_str(scene_json).context("failed to parse scene JSON")?;
-        Ok(Self { manifest, scene })
+    /// Load a map package from a directory on disk.
+    ///
+    /// Expects `<dir>/manifest.toml` and the scene file referenced by
+    /// `manifest.entry_scene` (RON format).
+    pub fn load(path: &Path) -> Result<Self, MapPackageError> {
+        let manifest_str = std::fs::read_to_string(path.join("manifest.toml"))?;
+        let manifest: Manifest = toml::from_str(&manifest_str)?;
+
+        let scene_str = std::fs::read_to_string(path.join(&manifest.entry_scene))?;
+        let scene: MapScene =
+            ron::from_str(&scene_str).map_err(|e| MapPackageError::Ron(e.to_string()))?;
+
+        Ok(MapPackage { manifest, scene })
     }
 
-    /// Validate both manifest and scene, returning all errors.
-    pub fn validate(&self) -> Vec<ValidationError> {
-        let mut errors = validate_manifest(&self.manifest);
-        errors.extend(validate_scene(&self.scene));
-        errors
+    /// Load a map package from in-memory strings (useful for tests and embedded maps).
+    ///
+    /// `manifest_toml` is TOML text, `scene_ron` is RON text.
+    pub fn from_strings(manifest_toml: &str, scene_ron: &str) -> Result<Self, MapPackageError> {
+        let manifest: Manifest = toml::from_str(manifest_toml)?;
+        let scene: MapScene =
+            ron::from_str(scene_ron).map_err(|e| MapPackageError::Ron(e.to_string()))?;
+        Ok(MapPackage { manifest, scene })
     }
 }

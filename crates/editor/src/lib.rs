@@ -1,8 +1,7 @@
-//! iGame Editor (stub).
+//! igame-editor – desktop-only UGC editor (War3-style).
 //!
-//! Future: egui-based scene editor, Inspector, trigger graph UI.
+//! This crate is **not** compiled for `wasm32-unknown-unknown`.
 
-/// Placeholder for editor initialization
-pub fn editor_stub() {
-    // TODO: implement editor
-}
+pub mod app;
+
+pub use app::EditorApp;

@@ -1,50 +1,129 @@
-# 测试指南 / Testing Guide
+# TESTING — iGame Test Strategy
 
-## 运行测试
+This document describes how tests are organised, how to run them, and the
+conventions to follow when adding new tests.
 
-```bash
-# 全部测试
-cargo test --workspace
+---
 
-# 仅 shared crate（含单元测试 + 集成测试 + golden 测试）
-cargo test -p igame-shared
+## Test Pyramid
 
-# 只跑集成测试
-cargo test -p igame-shared --test integration_test
-
-# 只跑 golden 测试
-cargo test -p igame-shared --test golden_test
-
-# 只跑 validation 单元测试
-cargo test -p igame-shared validation
+```
+           ┌──────────────────────────────────────────┐
+           │   Integration tests  (crates/runtime/tests/) │  ← load real files, run Bevy app
+           ├──────────────────────────────────────────┤
+           │     Unit tests  (each crate src/**/*.rs)  │  ← logic, (de)serialisation
+           └──────────────────────────────────────────┘
 ```
 
-## 测试分类
+### Unit tests
 
-### 单元测试（`crates/shared/src/validation.rs`）
-- `valid_manifest_has_no_errors`：合法 manifest 不产生错误
-- `empty_id_is_an_error`：id 为空时报 `EmptyRequiredField`
-- `schema_mismatch_is_an_error`：版本不匹配时报 `SchemaMismatch`
-- `duplicate_entity_id_detected`：重复 ID 报 `DuplicateEntityId`
+Located inside the crate's source files (`#[cfg(test)]` modules).
 
-### 集成测试（`crates/shared/tests/integration_test.rs`）
-- `load_example_map_succeeds`：加载示例地图包，无错误
-- `example_map_has_correct_entity_count`：示例地图有 3 个实体
-- `example_map_entity_ids_are_unique`：实体 ID 无重复
-- `example_map_manifest_id_is_correct`：manifest 字段值正确
-- `invalid_json_returns_error`：非法 JSON 返回 Err
-- `invalid_toml_returns_error`：非法 TOML 返回 Err
+- **`igame-shared`** — all types under `crates/shared/src/`:
+  - `map_package` — manifest TOML parsing, `MapPackage::from_strings`, error paths
+  - `scene` — `SceneData` JSON round-trip, transform defaults, component variants
+  - `trigger` — `TriggerGraph` JSON round-trip, event/condition/action parsing
+  - `validation` — `Validator` manifest + scene checks, semver detection
+- **`igame-runtime`** — inside `crates/runtime/src/`:
+  - `map_loader` — entities spawned, names match, transforms match
+  - `camera` — camera entity present, settings sane
+- **`igame-ugc`** — inside `crates/ugc/src/index.rs` — CRUD on `PackageIndex`
 
-### Golden 测试（`crates/shared/tests/golden_test.rs`）
-- `manifest_roundtrip`：manifest 序列化后反序列化结果不变
-- `scene_roundtrip`：scene 序列化后反序列化结果不变
-- `transform_defaults_are_identity`：默认 transform 为单位变换
+### Integration tests
 
-## 验收标准 / DoD
+Located in `crates/runtime/tests/integration_map_load.rs`.
 
-- [ ] `cargo test --workspace` 全部通过（0 失败）
-- [ ] `cargo clippy --all-targets -- -D warnings` 无警告
-- [ ] `cargo fmt --all -- --check` 无变更
-- [ ] `cargo build -p igame-shared --target wasm32-unknown-unknown` 成功
-- [ ] `cargo run -p igame-runtime` 可运行（显示 3D 场景 + 3 个方块）
-- [ ] 示例地图加载日志正常（无 ERROR/WARN）
+They load the **real** demo map (`examples/demo_map/`) via `include_str!`, create
+a headless Bevy `App` with `MinimalPlugins`, run several ticks, and assert:
+
+| Test | What it checks |
+|------|----------------|
+| `demo_map_manifest_name` | Manifest name == "Demo Map" |
+| `demo_map_manifest_version` | Version == "0.1.0" |
+| `demo_map_manifest_author` | Author field non-empty |
+| `demo_map_has_entities` | At least one entity spawned |
+| `demo_map_entity_count_matches_scene` | Spawned count == `scene.entities` length |
+| `all_spawned_entities_have_name` | Every entity has `Name` component |
+| `all_spawned_entities_have_transform` | Every entity has `Transform` component |
+| `demo_map_contains_ground_entity` | "Ground" entity exists |
+| `demo_map_contains_player_start` | "PlayerStart" entity exists |
+| `multiple_ticks_do_not_duplicate_entities` | Entity count stable after 5 ticks |
+
+---
+
+## Running Tests
+
+```bash
+# Everything
+cargo test --workspace
+
+# One crate
+cargo test -p igame-shared
+cargo test -p igame-runtime
+cargo test -p igame-ugc
+
+# Integration tests only
+cargo test -p igame-runtime --test integration_map_load
+
+# A single test by name
+cargo test -p igame-runtime demo_map_manifest_name
+
+# With output (helpful for debugging)
+cargo test --workspace -- --nocapture
+```
+
+---
+
+## CI Gates
+
+The CI workflow (`.github/workflows/ci.yml`) must pass on every PR:
+
+| Job | Command |
+|-----|---------|
+| `fmt` | `cargo fmt --all -- --check` |
+| `clippy` | `cargo clippy --workspace --all-targets -- -D warnings` |
+| `test` | `cargo test --workspace` |
+| `wasm-build` | `cargo build -p igame-shared --target wasm32-unknown-unknown` |
+
+---
+
+## Adding New Tests
+
+### Adding a unit test (shared types)
+
+1. Open the relevant `src/*.rs` file in `crates/shared/`.
+2. Add a test to the existing `#[cfg(test)]` block at the bottom.
+3. Keep tests self-contained — use inline strings, not filesystem reads.
+
+### Adding a map-loader test
+
+- For **entity spawning logic**: add to the `#[cfg(test)] mod tests` inside
+  `crates/runtime/src/map_loader.rs` (uses the hardcoded inline `MANIFEST` / `SCENE`).
+- For **demo-map file assertions**: add a `#[test]` function to
+  `crates/runtime/tests/integration_map_load.rs`.
+
+### Golden / snapshot tests (planned)
+
+Future tests will capture snapshots of serialised scene data and compare them to
+committed baselines (`tests/golden/`).  If a serialisation format changes
+intentionally, update the golden files along with the code.
+
+---
+
+## Headless Bevy Tests
+
+Runtime tests run without a window.  Use **`MinimalPlugins`** as the base, and
+add only the plugins the test needs:
+
+```rust
+fn build_app() -> App {
+    let mut app = App::new();
+    app.add_plugins(MinimalPlugins);          // always
+    app.add_plugins(bevy::input::InputPlugin); // only if you need keyboard/mouse
+    app.add_plugins(MapLoaderPlugin { .. });
+    app
+}
+```
+
+Never use `DefaultPlugins` in tests — it tries to open a window and will panic
+in CI environments without a display.

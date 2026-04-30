@@ -1,0 +1,108 @@
+name: Auto-merge
+
+# Safety Mode A: automatically enable GitHub native auto-merge (rebase)
+# for PRs authored by allowlisted users that meet all eligibility criteria.
+# No manual label required.  Opt-out: draft, "do-not-merge" label, or WIP title.
+#
+# Trigger whenever a PR is created, updated, or its state/labels change.
+on:
+  pull_request_target:
+    types:
+      - opened
+      - reopened
+      - synchronize
+      - ready_for_review
+      - converted_to_draft
+      - labeled
+      - unlabeled
+
+permissions:
+  pull-requests: write
+  contents: write
+
+jobs:
+  manage-automerge:
+    name: Manage auto-merge
+    runs-on: ubuntu-latest
+    steps:
+      # ------------------------------------------------------------------ #
+      # Determine whether this PR qualifies for auto-merge (Safety Mode A). #
+      #                                                                      #
+      # ALLOW conditions (all must be true):                                 #
+      #   • PR author is in the allowlist                                    #
+      #   • PR comes from the same repository (not a fork)                  #
+      #   • PR is not a draft                                                #
+      #   • PR title does not contain "WIP" (case-insensitive, whole word)  #
+      #   • PR does not carry the "do-not-merge" label                      #
+      # ------------------------------------------------------------------ #
+      - name: Evaluate eligibility
+        id: eligibility
+        env:
+          PR_AUTHOR: ${{ github.event.pull_request.user.login }}
+          IS_DRAFT: ${{ github.event.pull_request.draft }}
+          HEAD_REPO: ${{ github.event.pull_request.head.repo.full_name }}
+          BASE_REPO: ${{ github.repository }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_LABELS: ${{ toJson(github.event.pull_request.labels.*.name) }}
+        run: |
+          set -euo pipefail
+          eligible=true
+
+          # Allowlist (Safety Mode A) — only these authors get auto-merge
+          ALLOWLIST="dulingzhi github-actions[bot] copilot-swe-agent[bot]"
+          allowed=false
+          for user in $ALLOWLIST; do
+            if [ "$PR_AUTHOR" = "$user" ]; then
+              allowed=true
+              break
+            fi
+          done
+          if [ "$allowed" = "false" ]; then
+            echo "::notice::Auto-merge skipped: author '${PR_AUTHOR}' is not in the allowlist."
+            eligible=false
+          fi
+
+          if [ "$HEAD_REPO" != "$BASE_REPO" ]; then
+            echo "::notice::Auto-merge skipped: PR is from a fork ($HEAD_REPO)."
+            eligible=false
+          fi
+
+          if [ "$IS_DRAFT" = "true" ]; then
+            echo "::notice::Auto-merge skipped: PR is a draft."
+            eligible=false
+          fi
+
+          if echo "$PR_TITLE" | grep -qiE '(^|[^[:alnum:]])WIP([^[:alnum:]]|$)'; then
+            echo "::notice::Auto-merge skipped: PR title contains WIP."
+            eligible=false
+          fi
+
+          if echo "$PR_LABELS" | grep -q '"do-not-merge"'; then
+            echo "::notice::Auto-merge skipped: PR has the 'do-not-merge' label."
+            eligible=false
+          fi
+
+          echo "eligible=$eligible" >> "$GITHUB_OUTPUT"
+
+      # Enable GitHub native auto-merge (rebase strategy).
+      # The merge is deferred until all required status checks pass.
+      - name: Enable auto-merge (rebase)
+        if: steps.eligibility.outputs.eligible == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh pr merge "${{ github.event.pull_request.number }}" \
+            --auto \
+            --rebase \
+            --repo "${{ github.repository }}"
+
+      # When a PR becomes ineligible (draft, do-not-merge added, etc.),
+      # cancel any previously-scheduled auto-merge.
+      - name: Disable auto-merge
+        if: steps.eligibility.outputs.eligible == 'false'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh pr merge "${{ github.event.pull_request.number }}" \
+            --no-auto \
+            --repo "${{ github.repository }}" || true

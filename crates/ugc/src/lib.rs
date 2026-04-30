@@ -1,8 +1,14 @@
-//! iGame UGC package management (stub).
+//! igame-ugc — UGC package management (stub).
 //!
-//! Future: package discovery, dependency resolution, content indexing.
+//! Planned features (M6 / M7):
+//! - Map package index (local and remote)
+//! - Dependency resolution and conflict detection
+//! - Package download, caching, and integrity verification
+//! - Version migration framework
+//! - Publisher signing (optional)
 
-/// Placeholder for UGC initialization
-pub fn ugc_stub() {
-    // TODO: implement UGC
-}
+pub mod index;
+pub mod registry;
+
+pub use index::{MapEntry, PackageIndex};
+pub use registry::Registry;

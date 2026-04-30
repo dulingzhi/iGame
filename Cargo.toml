@@ -8,36 +8,26 @@ members = [
 ]
 
 [workspace.package]
-edition = "2021"
-version = "0.1.0"
-authors = ["dulingzhi"]
-license = "MIT OR Apache-2.0"
+version    = "0.1.0"
+edition    = "2021"
+license    = "MIT OR Apache-2.0"
+authors    = ["iGame Contributors"]
+repository = "https://github.com/dulingzhi/iGame"
 
 [workspace.dependencies]
-serde = { version = "1", features = ["derive"] }
-serde_json = "1"
-toml = "0.8"
-thiserror = "1"
-anyhow = "1"
-log = "0.4"
-bevy = { version = "0.15", default-features = false, features = [
-    "bevy_asset",
-    "bevy_core_pipeline",
-    "bevy_pbr",
-    "bevy_render",
-    "bevy_sprite",
-    "bevy_text",
-    "bevy_ui",
-    "bevy_winit",
-    "bevy_scene",
-    "default_font",
-    "x11",
-] }
+igame-shared = { path = "crates/shared" }
+bevy         = { version = "0.15", default-features = true }
+serde        = { version = "1", features = ["derive"] }
+serde_json   = "1"
+toml         = "0.8"
+ron          = "0.8"
+thiserror    = "1"
+anyhow       = "1"
+log          = "0.4"
 
 [profile.dev]
 opt-level = 1
 
 [profile.release]
 opt-level = 3
-lto = "thin"
-strip = true
+lto       = "thin"

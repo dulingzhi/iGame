@@ -1,10 +1,17 @@
 [package]
-name = "igame-ugc"
-version.workspace = true
-edition.workspace = true
-authors.workspace = true
-license.workspace = true
-description = "iGame UGC package management (stub - to be implemented)"
+name        = "igame-ugc"
+version.workspace    = true
+edition.workspace    = true
+license.workspace    = true
+description = "UGC package management for iGame (stub)"
+
+[lib]
+name = "igame_ugc"
+path = "src/lib.rs"
 
 [dependencies]
-igame-shared = { path = "../shared" }
+igame-shared = { workspace = true }
+serde        = { workspace = true }
+serde_json   = { workspace = true }
+toml         = { workspace = true }
+thiserror    = { workspace = true }
