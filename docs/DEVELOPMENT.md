@@ -158,12 +158,39 @@ The recommended cycle for each feature:
 4. cargo clippy -- -D warnings       ← no new warnings
 5. cargo fmt --all                   ← tidy formatting
        ↓
-6. Commit, open PR, add `automerge` label
+6. Commit, open PR
        ↓
-7. CI green → auto squash-merge
+7. Auto-merge workflow checks eligibility automatically (Safety Mode A):
+     • Author in allowlist + same-repo branch + non-draft
+     • No "do-not-merge" label + no "WIP" in title
+     • If eligible → GitHub native auto-merge (rebase) enabled
        ↓
-8. Move to the next feature
+8. CI green → auto rebase-merge
+       ↓
+9. Move to the next feature
 ```
+
+> **No manual label required.** To opt-out of auto-merge: mark the PR as
+> **Draft**, add the `do-not-merge` label, or include `WIP` in the title.
+
+### Auto-merge eligibility (Safety Mode A)
+
+| Gate | Rule |
+|------|------|
+| Author allowlist | `dulingzhi`, `github-actions[bot]`, `copilot-swe-agent[bot]` |
+| Same repository | `head.repo == base.repo` (forks excluded) |
+| Not a draft | PR must be marked *Ready for review* |
+| No WIP in title | Title must not match `\bWIP\b` (case-insensitive) |
+| No block label | `do-not-merge` label absent |
+
+### Required repository settings (one-time setup)
+
+1. **Settings → General → Pull Requests → Allow auto-merge** ✅
+2. **Settings → General → Pull Requests → Allow rebase merging** ✅
+3. **Settings → Branches → Branch protection for `main`**:
+   - Require status checks: `Formatting`, `Clippy`, `Tests`, `WASM Build (shared)`
+   - Require branches to be up to date before merging
+4. **Settings → Actions → General → Workflow permissions**: Read and write ✅
 
 ---
 

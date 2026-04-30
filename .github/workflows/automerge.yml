@@ -1,8 +1,12 @@
 name: Auto-merge
 
+# Safety Mode A: automatically enable GitHub native auto-merge (rebase)
+# for PRs authored by allowlisted users that meet all eligibility criteria.
+# No manual label required.  Opt-out: draft, "do-not-merge" label, or WIP title.
+#
 # Trigger whenever a PR is created, updated, or its state/labels change.
 on:
-  pull_request:
+  pull_request_target:
     types:
       - opened
       - reopened
@@ -22,17 +26,19 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       # ------------------------------------------------------------------ #
-      # Determine whether this PR qualifies for auto-merge.                 #
+      # Determine whether this PR qualifies for auto-merge (Safety Mode A). #
       #                                                                      #
-      # Opt-OUT conditions (any one disables auto-merge):                   #
-      #   • PR is a draft                                                    #
-      #   • PR comes from a fork (head repo ≠ base repo)                    #
-      #   • PR title contains "WIP" (case-insensitive, whole word)          #
-      #   • PR carries the "do-not-merge" label                              #
+      # ALLOW conditions (all must be true):                                 #
+      #   • PR author is in the allowlist                                    #
+      #   • PR comes from the same repository (not a fork)                  #
+      #   • PR is not a draft                                                #
+      #   • PR title does not contain "WIP" (case-insensitive, whole word)  #
+      #   • PR does not carry the "do-not-merge" label                      #
       # ------------------------------------------------------------------ #
       - name: Evaluate eligibility
         id: eligibility
         env:
+          PR_AUTHOR: ${{ github.event.pull_request.user.login }}
           IS_DRAFT: ${{ github.event.pull_request.draft }}
           HEAD_REPO: ${{ github.event.pull_request.head.repo.full_name }}
           BASE_REPO: ${{ github.repository }}
@@ -42,13 +48,27 @@ jobs:
           set -euo pipefail
           eligible=true
 
-          if [ "$IS_DRAFT" = "true" ]; then
-            echo "::notice::Auto-merge skipped: PR is a draft."
+          # Allowlist (Safety Mode A) — only these authors get auto-merge
+          ALLOWLIST="dulingzhi github-actions[bot] copilot-swe-agent[bot]"
+          allowed=false
+          for user in $ALLOWLIST; do
+            if [ "$PR_AUTHOR" = "$user" ]; then
+              allowed=true
+              break
+            fi
+          done
+          if [ "$allowed" = "false" ]; then
+            echo "::notice::Auto-merge skipped: author '${PR_AUTHOR}' is not in the allowlist."
             eligible=false
           fi
 
           if [ "$HEAD_REPO" != "$BASE_REPO" ]; then
             echo "::notice::Auto-merge skipped: PR is from a fork ($HEAD_REPO)."
+            eligible=false
+          fi
+
+          if [ "$IS_DRAFT" = "true" ]; then
+            echo "::notice::Auto-merge skipped: PR is a draft."
             eligible=false
           fi
 
