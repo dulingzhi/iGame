@@ -1,0 +1,112 @@
+name: Auto Merge
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+  workflow_run:
+    workflows: ["CI"]
+    types: [completed]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  auto-merge:
+    name: Enable Auto Merge
+    runs-on: ubuntu-latest
+    if: |
+      github.event_name == 'pull_request' ||
+      (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success')
+    steps:
+      - name: Check PR eligibility and enable auto-merge
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const ALLOWED_AUTHORS = ['dulingzhi', 'github-actions[bot]', 'copilot-swe-agent[bot]'];
+
+            let prNumber;
+
+            if (context.eventName === 'pull_request') {
+              prNumber = context.payload.pull_request.number;
+            } else if (context.eventName === 'workflow_run') {
+              const headSha = context.payload.workflow_run.head_sha;
+              const prs = await github.rest.pulls.list({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                state: 'open',
+                per_page: 100,
+              });
+              const matchingPr = prs.data.find(pr => pr.head.sha === headSha);
+              if (!matchingPr) {
+                console.log('No matching PR found for this workflow run');
+                return;
+              }
+              prNumber = matchingPr.number;
+            }
+
+            if (!prNumber) {
+              console.log('No PR number found');
+              return;
+            }
+
+            const pr = await github.rest.pulls.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: prNumber,
+            });
+
+            const prData = pr.data;
+
+            if (prData.draft) {
+              console.log('PR is draft, skipping auto-merge');
+              return;
+            }
+
+            if (prData.head.repo.full_name !== prData.base.repo.full_name) {
+              console.log('PR is from a fork, skipping auto-merge');
+              return;
+            }
+
+            const author = prData.user.login;
+            if (!ALLOWED_AUTHORS.includes(author)) {
+              console.log(`Author '${author}' not in whitelist, skipping auto-merge`);
+              return;
+            }
+
+            const title = prData.title.toUpperCase();
+            if (title.includes('WIP') || title.includes('DO NOT MERGE')) {
+              console.log('PR title contains WIP/DO NOT MERGE, skipping');
+              return;
+            }
+
+            const labels = prData.labels.map(l => l.name.toLowerCase());
+            if (labels.includes('do-not-merge') || labels.includes('blocked')) {
+              console.log('PR has blocking label, skipping auto-merge');
+              return;
+            }
+
+            console.log(`Enabling auto-merge (rebase) for PR #${prNumber}`);
+
+            try {
+              await github.graphql(`
+                mutation EnableAutoMerge($pullRequestId: ID!) {
+                  enablePullRequestAutoMerge(input: {
+                    pullRequestId: $pullRequestId,
+                    mergeMethod: REBASE
+                  }) {
+                    pullRequest {
+                      autoMergeRequest {
+                        mergeMethod
+                      }
+                    }
+                  }
+                }
+              `, {
+                pullRequestId: prData.node_id,
+              });
+              console.log('Auto-merge enabled successfully');
+            } catch (error) {
+              console.log(`Failed to enable auto-merge: ${error.message}`);
+            }
