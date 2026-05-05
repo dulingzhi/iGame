@@ -1,0 +1,9 @@
+[package]
+name = "editor_gizmo"
+version = "0.1.0"
+edition = "2021"
+description = "War3-style editor move gizmo logic: ray-plane intersection, drag displacement, grid snapping"
+
+[dependencies]
+
+[dev-dependencies]
