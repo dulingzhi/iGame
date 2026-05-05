@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, 'copilot/**']
   pull_request:
 
 env:
@@ -46,7 +46,8 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends \
-            libasound2-dev libudev-dev libwayland-dev libxkbcommon-dev
+            libasound2-dev libudev-dev libwayland-dev libxkbcommon-dev \
+            libxi-dev libx11-dev libxkbcommon-dev
       - name: Run clippy
         run: cargo clippy --workspace -- -D warnings
 
@@ -66,13 +67,35 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends \
-            libasound2-dev libudev-dev libwayland-dev libxkbcommon-dev
+            libasound2-dev libudev-dev libwayland-dev libxkbcommon-dev \
+            libxi-dev libx11-dev
       - name: Run tests
         run: cargo test --workspace
 
-  # ── WASM build check (shared crate only) ──────────────────────────────────
+  # ── Editor check (no display needed) ──────────────────────────────────────
+  editor-check:
+    name: Editor Check
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          cache-on-failure: true
+      - name: Install Linux dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            libasound2-dev libudev-dev libwayland-dev libxkbcommon-dev \
+            libxi-dev libx11-dev
+      - name: Check editor compiles
+        run: cargo check --package igame_editor
+
+  # ── WASM build check ──────────────────────────────────────────────────────
   wasm-build:
-    name: WASM Build (shared)
+    name: WASM Build
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -87,3 +110,5 @@ jobs:
           cache-on-failure: true
       - name: Build shared crate for WASM
         run: cargo build -p igame-shared --target wasm32-unknown-unknown
+      - name: Check runtime math library for WASM
+        run: cargo check --package igame_runtime --target wasm32-unknown-unknown

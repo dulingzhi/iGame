@@ -37,6 +37,19 @@ cargo run -p igame-runtime -- assets/maps/demo
 Use **WASD** or **Arrow keys** to pan the camera, **mouse scroll** to zoom.
 Press **Escape** to quit.
 
+### Launch the Editor (M3) / 启动编辑器
+
+```bash
+# Run unit tests for the math library
+cargo test --package igame_runtime
+
+# Launch the full egui editor (requires a display / GPU)
+cargo run --package igame_editor
+```
+
+See [`docs/editor.md`](docs/editor.md) for the full feature overview, control
+reference, and build instructions.
+
 ### Run All Tests / 运行全部测试
 
 ```bash
@@ -61,14 +74,19 @@ make wasm-build # Check shared crate compiles for WASM
 ```
 iGame/
 ├── crates/
-│   ├── shared/     # Core types: MapPackage, Manifest, Scene, validation
-│   ├── runtime/    # Bevy app: loads maps, RTS camera, entity spawning
-│   └── editor/     # Editor (stub – M3 planned)
+│   ├── shared/        # Core types: MapPackage, Manifest, Scene, validation
+│   ├── runtime/       # Bevy app: loads maps, RTS camera, entity spawning
+│   ├── editor/        # Editor stub (Bevy 0.15)
+│   ├── ugc/           # UGC platform crate
+│   ├── igame_runtime/ # Pure math library (Bevy 0.18, wasm-compatible)
+│   └── igame_editor/  # Full egui editor binary (Bevy 0.18 + bevy_egui 0.39)
 ├── assets/
 │   └── maps/
 │       └── demo/   # Example map package
 │           ├── manifest.toml
 │           └── scene.ron
+├── docs/
+│   └── editor.md   # Editor feature overview & controls
 ├── ROADMAP.md
 └── Makefile
 ```

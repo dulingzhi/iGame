@@ -5,6 +5,8 @@ members = [
     "crates/runtime",
     "crates/editor",
     "crates/ugc",
+    "crates/igame_runtime",
+    "crates/igame_editor",
 ]
 
 [workspace.package]
@@ -24,6 +26,9 @@ ron          = "0.8"
 thiserror    = "1"
 anyhow       = "1"
 log          = "0.4"
+
+[workspace.lints.rust]
+unused = "warn"
 
 [profile.dev]
 opt-level = 1
